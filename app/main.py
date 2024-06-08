@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-
+import argparse
 import asyncio
 from typing import Any
 
@@ -12,9 +12,10 @@ import mav_client
 import surftrak_status
 
 
-def main():
+def main(args):
     # Create a mav object
-    mav = mav_client.MavClient('http://127.0.0.1/mavlink2rest/v1')
+    logger.info(f'mavlink2rest URL: {args.mavlink2rest_url}')
+    mav = mav_client.MavClient(args.mavlink2rest_url)
 
     # Create status object
     status = surftrak_status.SurftrakStatus(mav)
@@ -58,5 +59,12 @@ def main():
 
 
 if __name__ == "__main__":
+    # Running as extension:        http://127.0.0.1/mavlink2rest/v1
+    # Debugging from topside:      http://192.168.2.2/mavlink2rest/v1
+
     logger.info(f"starting surftrak_fixit")
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mavlink2rest_url', type=str,
+                        default='http://127.0.0.1/mavlink2rest/v1',
+                        help='mavlink2rest URL')
+    main(parser.parse_args())
