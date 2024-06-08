@@ -1,0 +1,9 @@
+# Should match setup.py
+# Do not include setuptools
+
+aiohttp==3.9.5
+fastapi==0.109.1
+loguru==0.6.0
+pydantic==2.7.2
+requests==2.31.0
+uvicorn==0.13.4

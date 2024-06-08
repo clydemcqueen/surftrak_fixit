@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/css/index.css">
+    <title>Surftrak Fixit</title>
+</head>
+<body>
+    <div class="header">
+        <div class="card">
+            <p>Surftrak status</p>
+            <h4 id="system_status" class="status-unknown">
+                Waiting for the extension
+            </h4>
+            <h4 id="prb_not_configured" class="status-hidden">
+                RNGFND1_TYPE is 0, which means that there is no rangefinder configured in ArduSub
+            </h4>
+            <h4 id="prb_no_sensor_msgs" class="status-hidden">
+                RNGFND1_TYPE is 10 (MAVLink), but there are no DISTANCE_SENSOR messages, or the orientation is wrong
+            </h4>
+            <h4 id="prb_bad_orient" class="status-hidden">
+                RNGFND1_ORIENT must be set to 25 (down-facing)
+            </h4>
+            <h4 id="prb_bad_max" class="status-hidden">
+                RNGFND1_MAX_CM is 700cm (7m), which might be too low
+            </h4>
+            <h4 id="prb_bad_kpv" class="status-hidden">
+                To reduce oscillation, consider setting PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500
+            </h4>
+            <h4 id="prb_no_btn" class="status-hidden">
+                Surftrak mode (joystick function 13) is not assigned to a joystick button
+            </h4>
+        </div>
+    </div>
+    <div class="grid-container">
+        <div class="card"><p>Altitude (m)</p><h2 id="relative_alt_m_card">Unknown</h2></div>
+        <div class="card"><p>Rangefinder target (m)</p><h2 id="rf_target_m_card">Unknown</h2></div>
+        <div class="card"><p>Rangefinder reading (m)</p><h2 id="rangefinder_m_card">Unknown</h2></div>
+        <div class="card"><p>Seafloor altitude estimate (m)</p><h2 id="seafloor_alt_m_card">Unknown</h2></div>
+    </div>
+    <p>Parameters</p>
+    <div class="grid-container">
+        <div class="card"><p>RNGFND1_TYPE</p><h4 id="rngfnd1_type_card">Unknown</h4></div>
+        <div class="card"><p>RNGFND1_MAX_CM (cm)</p><h4 id="rngfnd1_max_cm_card">Unknown</h4></div>
+        <div class="card"><p>RNGFND1_MIN_CM (cm)</p><h4 id="rngfnd1_min_cm_card">Unknown</h4></div>
+        <div class="card"><p>RNGFND1_ORIENT</p><h4 id="rngfnd1_orient_card">Unknown</h4></div>
+        <div class="card"><p>SURFTRAK_DEPTH (cm)</p><h4 id="surftrak_depth_card">Unknown</h4></div>
+        <div class="card"><p>PSC_JERK_Z (cm/s^3)</p><h4 id="psc_jerk_z_card">Unknown</h4></div>
+        <div class="card"><p>PILOT_ACCEL_Z (m/s^2)</p><h4 id="pilot_accel_z_card">Unknown</h4></div>
+        <div class="card"><p>Surftrak button assignment</p><h4 id="btn_surftrak_card">Unknown</h4></div>
+    </div>
+    <script src="/js/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+    "name": "Surftrak Fixit",
+    "description": "Diagnose and fix Surftrak problems",
+    "icon": "mdi-wrench",
+    "company": "Discovery Bay",
+    "version": "v0.0.1",
+    "webpage": "https://github.com/clydemcqueen/surftrak_fixit",
+    "api": "",
+    "newpage": false
+ }
