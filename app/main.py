@@ -52,8 +52,9 @@ def main(args):
     # Start a web server
     # Uvicorn will add the server as a task on our event loop when we call serve()
     # Run with logging disabled, we'll use loguru to log interesting things
+    # 0.0.0.0 works inside a container, localhost does not
     logger.info('starting web server, press Ctrl-C to stop')
-    config = uvicorn.Config(app, port=8080, loop=loop, log_config=None)
+    config = uvicorn.Config(app, host='0.0.0.0', port=8080, loop=loop, log_config=None)
     server = uvicorn.Server(config)
     loop.run_until_complete(server.serve())
 
