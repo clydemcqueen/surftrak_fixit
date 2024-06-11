@@ -14,7 +14,7 @@ EXPOSE 8080/tcp
 LABEL version="v0.0.1"
 
 # Reference:
-# https://docs.bluerobotics.com/ardusub-zola/software/onboard/BlueOS-1.1/development/extensions/
+# https://blueos.cloud/docs/blueos/1.2/development/extensions
 # https://docs.docker.com/engine/api/v1.41/#tag/Container/operation/ContainerCreate
 LABEL permissions='\
 {\
@@ -22,6 +22,7 @@ LABEL permissions='\
     "8080/tcp": {},\
   },\
   "HostConfig": {\
+    "ExtraHosts": ["host.docker.internal:host-gateway"],\
     "PortBindings": {\
       "8080/tcp": [\
         {\
@@ -30,6 +31,9 @@ LABEL permissions='\
       ]\
     }\
   },\
+  "Env": [\
+    "MAVLINK2REST_URL=http://host.docker.internal/mavlink2rest/v1",\
+  ],\
 }'
 LABEL authors='[\
     {\
@@ -53,4 +57,4 @@ LABEL links='{\
 }'
 LABEL requirements="core >= 1.1"
 
-ENTRYPOINT cd /app && python main.py
+ENTRYPOINT cd /app && python main.py --mavlink2rest_url $MAVLINK2REST_URL

@@ -29,7 +29,7 @@ clydemcqueen/surftrak_fixit
 
 _Docker tag_
 ~~~
-test3
+test6
 ~~~
 
 _Custom settings_
@@ -39,6 +39,7 @@ _Custom settings_
     "8080/tcp": {}
   },
   "HostConfig": {
+    "ExtraHosts": ["host.docker.internal:host-gateway"],
     "PortBindings": {
       "8080/tcp": [
         {
@@ -46,6 +47,7 @@ _Custom settings_
         }
       ]
     }
-  }
+  },
+  "Env": ["MAVLINK2REST_URL=http://host.docker.internal/mavlink2rest/v1"]
 }
 ~~~

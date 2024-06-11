@@ -59,12 +59,12 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # Running as extension:        http://127.0.0.1/mavlink2rest/v1
+    # Running as extension:        http://host.docker.internal/mavlink2rest/v1
     # Debugging from topside:      http://192.168.2.2/mavlink2rest/v1
 
     logger.info(f"starting surftrak_fixit")
     parser = argparse.ArgumentParser()
     parser.add_argument('--mavlink2rest_url', type=str,
-                        default='http://127.0.0.1/mavlink2rest/v1',
+                        default='http://host.docker.internal/mavlink2rest/v1',
                         help='mavlink2rest URL')
     main(parser.parse_args())
