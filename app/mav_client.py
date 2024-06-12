@@ -2,6 +2,7 @@ import asyncio
 import copy
 import json
 import time
+from datetime import datetime
 from typing import Optional
 
 import aiohttp
@@ -9,6 +10,16 @@ import requests
 from loguru import logger
 
 import apm2
+
+EPOCH_START = datetime(1970, 1, 1)
+
+
+def m2r_datetime_to_epoch(datetime_str: str) -> float:
+    """
+    Turn a mavlink2rest date string (with nanoseconds) into seconds-since-epoch, comparable to time.time()
+    """
+    dt = datetime.strptime(datetime_str[0:-4] + 'Z', '%Y-%m-%dT%H:%M:%S.%fZ')
+    return(dt - EPOCH_START).total_seconds()
 
 
 def chars_to_str(param_id_chars: list[str]) -> str:
@@ -78,7 +89,7 @@ class MavClient:
         self._receiving_heartbeats = False
         self._last_heartbeat_time = None
 
-    def _get_json(self, path: str) -> Optional[dict[str, any]]:
+    def get_json(self, path: str) -> Optional[dict[str, any]]:
         """
         Get something from mavlink2rest
         """
@@ -86,7 +97,11 @@ class MavClient:
         try:
             response = requests.get(get_url)
             if response.status_code == 200:
-                return json.loads(response.text)
+                if response.text == 'None':
+                    # Expected, e.g., requesting a message from a comp_id that does not exist
+                    return None
+                else:
+                    return json.loads(response.text)
             else:
                 logger.error(f'GET [{get_url}] status code {response.status_code}')
                 return None
@@ -94,7 +109,24 @@ class MavClient:
             logger.error(f'GET [{get_url}] exception: {ex}')
             return None
 
-    def _send_msg(self, info: str, msg: dict[str, any]) -> bool:
+    def get_msg(self, msg_name: str, sys_id: int, comp_id: int, timeout: Optional[float]):
+        """
+        Get the most recent message for this (sys_id, comp_id, msg_name)
+        If timeout is not None, then check the 'last_update' time and reject old messages
+        """
+        msg = self.get_json(f'/mavlink/vehicles/{sys_id}/components/{comp_id}/messages/{msg_name}')
+
+        if msg is None:
+            return None
+
+        if timeout is not None:
+            last_update = m2r_datetime_to_epoch(msg['status']['time']['last_update'])
+            if time.time() - last_update > timeout:
+                return None
+
+        return msg
+
+    def send_msg(self, info: str, msg: dict[str, any]) -> bool:
         """
         Post a MAVLink message to mavlink2rest
         """
@@ -109,12 +141,12 @@ class MavClient:
             logger.error(f'POST [{info}] exception: {ex}')
             return False
 
-    def _get_template(self, msg_name: str) -> Optional[dict[str, any]]:
+    def get_template(self, msg_name: str) -> Optional[dict[str, any]]:
         """
         Ask mavlink2rest for a MAVLink message template, and cache the result
         """
         if msg_name not in self._template_cache:
-            template = self._get_json(f'/helper/mavlink?name={msg_name}')
+            template = self.get_json(f'/helper/mavlink?name={msg_name}')
             if template is None:
                 # Perhaps mavlink2rest hasn't started yet, caller can try again later
                 return None
@@ -129,7 +161,7 @@ class MavClient:
         Send MAV_CMD_SET_MESSAGE_INTERVAL messages
         Does not work for NAMED_VALUE_FLOAT, workarounds: set SR0_EXT_STAT or call _request_data_stream()
         """
-        msg = self._get_template('COMMAND_LONG')
+        msg = self.get_template('COMMAND_LONG')
         if msg is not None:
             msg['message']['target_system'] = self._target_system
             msg['message']['target_component'] = self._target_component
@@ -138,26 +170,26 @@ class MavClient:
                 logger.info(f'request msg_id {msg_id} at {frequency} Hz')
                 msg['message']['param1'] = msg_id
                 msg['message']['param2'] = int(1000000 / frequency)
-                self._send_msg('COMMAND_LONG:MAV_CMD_SET_MESSAGE_INTERVAL', msg)
+                self.send_msg('COMMAND_LONG:MAV_CMD_SET_MESSAGE_INTERVAL', msg)
 
     def _request_data_stream(self, stream_id: int, frequency=4):
         """
         Deprecated, but handy for getting NAMED_VALUE_FLOAT messages from ArduSub
         """
-        msg = self._get_template('REQUEST_DATA_STREAM')
+        msg = self.get_template('REQUEST_DATA_STREAM')
         if msg is not None:
             msg['message']['target_system'] = self._target_system
             msg['message']['target_component'] = self._target_component
             msg['message']['req_stream_id'] = stream_id
             msg['message']['req_message_rate'] = frequency
             msg['message']['start_stop'] = 1  # Start sending
-            self._send_msg(f'REQUEST_DATA_STREAM:{stream_id}', msg)
+            self.send_msg(f'REQUEST_DATA_STREAM:{stream_id}', msg)
 
     def _request_param(self, param_id: str):
         """
         Send a PARAM_REQUEST_READ message to the target system
         """
-        msg = self._get_template('PARAM_REQUEST_READ')
+        msg = self.get_template('PARAM_REQUEST_READ')
         if msg is None:
             return
 
@@ -177,7 +209,7 @@ class MavClient:
         msg['message']['target_component'] = self._target_component
         msg['message']['param_index'] = -1
         msg['message']['param_id'] = str_to_chars(param_id, 16)
-        self._send_msg('PARAM_REQUEST_READ', msg)
+        self.send_msg('PARAM_REQUEST_READ', msg)
         self._param_request_burst_count += 1
 
     def _add_ws_text_msg(self, ws_msg: aiohttp.WSMessage):
@@ -283,14 +315,14 @@ class MavClient:
         Set a parameter value
         """
         if self.ok():
-            msg = self._get_template('PARAM_SET')
+            msg = self.get_template('PARAM_SET')
             if msg is not None:
                 msg['message']['target_system'] = self._target_system
                 msg['message']['target_component'] = self._target_component
                 msg['message']['param_id'] = str_to_chars(param_id, 16)
                 msg['message']['param_value'] = param_value
                 msg['message']['param_type'] = 9  # ArduSub will ignore this
-                self._send_msg(f'PARAM_SET:{param_id}', msg)
+                self.send_msg(f'PARAM_SET:{param_id}', msg)
 
     def get_named_float(self, name: str) -> Optional[float]:
         """

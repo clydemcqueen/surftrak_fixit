@@ -1,7 +1,11 @@
 let el_system_status = document.getElementById("system_status");
 
+let el_info_ping_detected = document.getElementById("info_ping_detected");
+let el_info_wl_dvl_detected = document.getElementById("info_wl_dvl_detected");
+
 let el_prb_not_configured = document.getElementById("prb_not_configured");
 let el_prb_no_sensor_msgs = document.getElementById("prb_no_sensor_msgs");
+let el_prb_too_many_sensor_msgs = document.getElementById("prb_too_many_sensor_msgs");
 let el_prb_bad_orient = document.getElementById("prb_bad_orient");
 let el_prb_bad_max = document.getElementById("prb_bad_max");
 let el_prb_bad_kpv = document.getElementById("prb_bad_kpv");
@@ -31,8 +35,11 @@ async function getStatus() {
         if (response.ok) {
             const {
                 ok,
+                info_ping_detected,
+                info_wl_dvl_detected,
                 prb_not_configured,
                 prb_no_sensor_msgs,
+                prb_too_many_sensor_msgs,
                 prb_bad_orient,
                 prb_bad_max,
                 prb_bad_kpv,
@@ -58,8 +65,12 @@ async function getStatus() {
             }
 
             if (system_status_good) {
+                el_info_ping_detected.className = info_ping_detected ? "status-good" : "status-hidden";
+                el_info_wl_dvl_detected.className = info_wl_dvl_detected ? "status-good" : "status-hidden";
+
                 el_prb_not_configured.className = prb_not_configured ? "status-error" : "status-hidden";
                 el_prb_no_sensor_msgs.className = prb_no_sensor_msgs ? "status-error" : "status-hidden";
+                el_prb_too_many_sensor_msgs.className = prb_too_many_sensor_msgs ? "status-error" : "status-hidden";
                 el_prb_bad_orient.className = prb_bad_orient ? "status-error" : "status-hidden";
 
                 el_prb_bad_max.className = prb_bad_max ? "status-warning" : "status-hidden";

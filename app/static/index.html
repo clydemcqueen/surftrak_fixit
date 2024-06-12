@@ -8,15 +8,24 @@
 <body>
     <div class="header">
         <div class="card">
-            <p>Surftrak status</p>
+            <h2>Surftrak status</h2>
             <h4 id="system_status" class="status-unknown">
                 Waiting for the extension
+            </h4>
+            <h4 id="info_ping_detected" class="status-hidden">
+                Receiving down-facing DISTANCE_SENSOR messages from Ping sonar
+            </h4>
+            <h4 id="info_wl_dvl_detected" class="status-hidden">
+                Receiving down-facing DISTANCE_SENSOR messages from Water Linked DVL
             </h4>
             <h4 id="prb_not_configured" class="status-hidden">
                 RNGFND1_TYPE is 0, which means that there is no rangefinder configured in ArduSub
             </h4>
             <h4 id="prb_no_sensor_msgs" class="status-hidden">
-                RNGFND1_TYPE is 10 (MAVLink), but there are no DISTANCE_SENSOR messages, or the orientation is wrong
+                RNGFND1_TYPE is 10 (MAVLink), but there are no down-facing DISTANCE_SENSOR messages
+            </h4>
+            <h4 id="prb_too_many_sensor_msgs" class="status-hidden">
+                There are DISTANCE_SENSOR messages from 2 different sources, they may conflict
             </h4>
             <h4 id="prb_bad_orient" class="status-hidden">
                 RNGFND1_ORIENT must be set to 25 (down-facing)
