@@ -6,7 +6,6 @@ import pydantic
 import apm2
 import mav_client
 
-
 MSG_TIMEOUT = 1.0
 
 
@@ -21,8 +20,11 @@ class StatusModel(pydantic.BaseModel):
     # Errors
     prb_not_configured: bool = pydantic.Field(default=False)
     prb_no_sensor_msgs: bool = pydantic.Field(default=False)
-    prb_bad_orient: bool = pydantic.Field(default=False)
     prb_too_many_sensor_msgs: bool = pydantic.Field(default=False)
+    prb_rangefinder_timeout: bool = pydantic.Field(default=False)
+    prb_global_position_int_timeout: bool = pydantic.Field(default=False)
+    prb_bad_orient: bool = pydantic.Field(default=False)
+    # TODO rf_target timeout
 
     # Warnings
     prb_bad_max: bool = pydantic.Field(default=False)
@@ -66,6 +68,8 @@ class SurftrakStatus:
         self._mav.set_msg_callback(self.msg_callback)
         self._mav.set_msg_frequency(apm2.MAVLINK_MSG_ID_RANGEFINDER)
         self._mav.set_msg_frequency(apm2.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+        self._t_global_position_int: Optional[float] = None
+        self._t_rangefinder: Optional[float] = None
 
     def msg_callback(self, msg: any):
         sys_id = msg['header']['system_id']
@@ -73,12 +77,13 @@ class SurftrakStatus:
         msg_body = msg['message']
         msg_name = msg_body['type']
 
-        # TODO handle message timeout(s)
         if sys_id == 1 and comp_id == 1:
             if msg_name == 'RANGEFINDER':
                 self._status.rangefinder_m = msg_body['distance']
+                self._t_rangefinder = time.time()
             elif msg_name == 'GLOBAL_POSITION_INT':
                 self._status.relative_alt_m = msg_body['relative_alt'] * 0.001
+                self._t_global_position_int = time.time()
 
     def scan_buttons(self):
         """
@@ -114,6 +119,14 @@ class SurftrakStatus:
         return msg is not None and msg['message']['orientation']['type'] == 'MAV_SENSOR_ROTATION_PITCH_270'
 
     def get_status(self) -> dict[str, any]:
+        # Manage timeouts for websocket messages
+        self._status.prb_global_position_int_timeout = (
+                self._t_global_position_int is None or
+                time.time() - self._t_global_position_int > MSG_TIMEOUT)
+        self._status.prb_rangefinder_timeout = (
+                self._t_rangefinder is None or
+                time.time() - self._t_rangefinder > MSG_TIMEOUT)
+
         self._status.ok = self._mav.ok()
 
         if self._status.ok:
@@ -132,8 +145,8 @@ class SurftrakStatus:
             # Proposed WL DVL comp id: https://github.com/bluerobotics/BlueOS-Water-Linked-DVL/pull/31
             self._status.info_ping_detected = self.distance_sensor_msg_ok(1, 194)
             self._status.info_wl_dvl_detected = (
-                self.distance_sensor_msg_ok(255, 0) or
-                self.distance_sensor_msg_ok(0, 197))
+                    self.distance_sensor_msg_ok(255, 0) or
+                    self.distance_sensor_msg_ok(0, 197))
 
             def rf_configured() -> bool:
                 return self._status.rngfnd1_type is not None and self._status.rngfnd1_type != 0
@@ -173,5 +186,8 @@ class SurftrakStatus:
 
                 # If RNGFND1_MAX_CM is 700 (the default) then the pilot probably forgot to configure it
                 self._status.prb_bad_max = self._status.rngfnd1_max_cm == 700
+            else:
+                self._status.relative_alt_m = None
+                self._status.rangefinder_m = None
 
         return self._status.model_dump()

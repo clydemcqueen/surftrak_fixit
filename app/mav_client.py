@@ -169,7 +169,7 @@ class MavClient:
             for msg_id, frequency in self._msg_frequencies.items():
                 logger.info(f'request msg_id {msg_id} at {frequency} Hz')
                 msg['message']['param1'] = msg_id
-                msg['message']['param2'] = int(1000000 / frequency)
+                msg['message']['param2'] = int(1000000 / frequency) if frequency > 0 else -1
                 self.send_msg('COMMAND_LONG:MAV_CMD_SET_MESSAGE_INTERVAL', msg)
 
     def _request_data_stream(self, stream_id: int, frequency=4):
