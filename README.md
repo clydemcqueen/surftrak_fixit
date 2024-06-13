@@ -29,7 +29,7 @@ clydemcqueen/surftrak_fixit
 
 _Docker tag_
 ~~~
-test6
+v1.0.0-beta.1
 ~~~
 
 _Custom settings_

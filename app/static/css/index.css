@@ -2,6 +2,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     font-size: large;
     text-align: left;
+    background-color: rgb(255, 255, 255);
 }
 
 .header {
@@ -50,4 +51,5 @@ p,h2,h4 {
 
 .status-error {
     background-color: rgb(248, 176, 176);
+    font-weight: bold;
 }
