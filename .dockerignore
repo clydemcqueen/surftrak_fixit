@@ -1,5 +1,4 @@
 .idea/
-app/__pycache__/
 .venv/
 build/
 surftrak_fixit.egg-info/

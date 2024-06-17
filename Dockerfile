@@ -1,17 +1,17 @@
 # We need gcc to install aiohttp, so we can't use slim
 FROM python:3.9-bullseye
 
-# Copy and run setup.py
-COPY app/setup.py /app/setup.py
-RUN python /app/setup.py install
-
 # Copy the app
 COPY app /app
+
+# Use pip as the build frontend
+COPY pyproject.toml /app
+RUN python -m pip install /app
 
 # For web app:
 EXPOSE 8080/tcp
 
-LABEL version="v0.0.1"
+LABEL version="v1.0.0-beta.1"
 
 # Reference:
 # https://blueos.cloud/docs/blueos/1.2/development/extensions
