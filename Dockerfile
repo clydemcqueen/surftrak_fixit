@@ -5,8 +5,8 @@ FROM python:3.9-bullseye
 COPY app /app
 
 # Use pip as the build frontend
-COPY pyproject.toml /app
-RUN python -m pip install /app
+COPY requirements.txt /app
+RUN python -m pip install -r /app/requirements.txt
 
 # For web app:
 EXPOSE 8080/tcp
