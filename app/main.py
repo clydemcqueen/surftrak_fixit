@@ -60,8 +60,11 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # Running as extension:        http://host.docker.internal/mavlink2rest/v1
-    # Debugging from topside:      http://192.168.2.2/mavlink2rest/v1
+    # Various mavlink2rest URLs
+    # Running as extension on the Pi (default):                 http://host.docker.internal/mavlink2rest/v1
+    # Test from topside laptop:                                 http://192.168.2.2/mavlink2rest/v1
+    # Testing on a desktop against a BlueOS container:          http://host_ip:6040/v1
+    # Testing on a desktop against a mavlink2rest container:    http://localhost:8088/v1
 
     logger.info(f"starting surftrak_fixit")
     parser = argparse.ArgumentParser()

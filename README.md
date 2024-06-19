@@ -1,4 +1,4 @@
-# Surftrak Fixit 
+# Surftrak Fixit
 
 _Surftrak_ is a new flight mode in [ArduSub 4.5](https://www.ardusub.com/).
 

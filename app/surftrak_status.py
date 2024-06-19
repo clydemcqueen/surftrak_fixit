@@ -9,18 +9,21 @@ import mav_client
 MSG_TIMEOUT = 1.0
 
 
+class SensorModel(pydantic.BaseModel):
+    distance: float = pydantic.Field(default=0.0)
+    sq: int = pydantic.Field(default=0)
+
+
 class StatusModel(pydantic.BaseModel):
     # Extension status
     ok: bool = pydantic.Field(default=False)
 
-    # Info
-    info_ping_detected: bool = pydantic.Field(default=False)
-    info_wl_dvl_detected: bool = pydantic.Field(default=False)
+    # Sensors that send DISTANCE_SENSOR messages
+    ping: Optional[SensorModel] = pydantic.Field(default=None)
+    wl_dvl: Optional[SensorModel] = pydantic.Field(default=None)
 
     # Errors
     prb_not_configured: bool = pydantic.Field(default=False)
-    prb_no_sensor_msgs: bool = pydantic.Field(default=False)
-    prb_too_many_sensor_msgs: bool = pydantic.Field(default=False)
     prb_rangefinder_timeout: bool = pydantic.Field(default=False)
     prb_global_position_int_timeout: bool = pydantic.Field(default=False)
     prb_bad_orient: bool = pydantic.Field(default=False)
@@ -30,7 +33,6 @@ class StatusModel(pydantic.BaseModel):
     prb_bad_max: bool = pydantic.Field(default=False)
     prb_bad_kpv: bool = pydantic.Field(default=False)
     prb_no_btn: bool = pydantic.Field(default=False)
-    # TODO distance_sensor has low signal quality
 
     # From GLOBAL_POSITION_INT
     # Convert all distances to meters ("_m")
@@ -52,6 +54,7 @@ class StatusModel(pydantic.BaseModel):
     surftrak_depth: Optional[float] = pydantic.Field(default=None)
     psc_jerk_z: Optional[float] = pydantic.Field(default=None)
     pilot_accel_z: Optional[float] = pydantic.Field(default=None)
+    rngfnd_sq_min: Optional[float] = pydantic.Field(default=None)
 
     # Button assignments
     btn_surftrak: Optional[str] = pydantic.Field(default=None)
@@ -111,12 +114,15 @@ class SurftrakStatus:
                 self._status.btn_surftrak = param_id
                 return
 
-    def distance_sensor_msg_ok(self, sys_id: int, comp_id: int) -> bool:
+    def get_distance_sensor_msg(self, sys_id: int, comp_id: int) -> Optional[SensorModel]:
         """
         Look for a down-facing DISTANCE_SENSOR msg from (sys_id, comp_id)
         """
         msg = self._mav.get_msg('DISTANCE_SENSOR', sys_id, comp_id, MSG_TIMEOUT)
-        return msg is not None and msg['message']['orientation']['type'] == 'MAV_SENSOR_ROTATION_PITCH_270'
+        if msg is not None and msg['message']['orientation']['type'] == 'MAV_SENSOR_ROTATION_PITCH_270':
+            return SensorModel(distance=msg['message']['current_distance'], sq=msg['message']['signal_quality'])
+        else:
+            return None
 
     def get_status(self) -> dict[str, any]:
         # Manage timeouts for websocket messages
@@ -136,17 +142,19 @@ class SurftrakStatus:
             self._status.surftrak_depth = self._mav.get_param('SURFTRAK_DEPTH')
             self._status.psc_jerk_z = self._mav.get_param('PSC_JERK_Z')
             self._status.pilot_accel_z = self._mav.get_param('PILOT_ACCEL_Z')
+            self._status.rngfnd_sq_min = self._mav.get_param('RNGFND_SQ_MIN')
 
             # Get BTN* params and look for surftrak-related assignments
             self.scan_buttons()
 
             # DISTANCE_SENSOR messages sent via mavlink2rest will not appear on the socket
-            # Look for down-facing DISTANCE_SENSOR messages from well-known (sys_id, comp_id) tuples
+            # https://github.com/mavlink/mavlink2rest/issues/93
+            self._status.ping = self.get_distance_sensor_msg(1, 194)
+            self._status.wl_dvl = self.get_distance_sensor_msg(255, 0)
+
             # Proposed WL DVL comp id: https://github.com/bluerobotics/BlueOS-Water-Linked-DVL/pull/31
-            self._status.info_ping_detected = self.distance_sensor_msg_ok(1, 194)
-            self._status.info_wl_dvl_detected = (
-                    self.distance_sensor_msg_ok(255, 0) or
-                    self.distance_sensor_msg_ok(0, 197))
+            if self._status.wl_dvl is None:
+                self._status.wl_dvl = self.get_distance_sensor_msg(0, 197)
 
             def rf_configured() -> bool:
                 return self._status.rngfnd1_type is not None and self._status.rngfnd1_type != 0
@@ -171,14 +179,6 @@ class SurftrakStatus:
                 self._status.rngfnd1_max_cm = self._mav.get_param('RNGFND1_MAX_CM')
                 self._status.rngfnd1_min_cm = self._mav.get_param('RNGFND1_MIN_CM')
                 self._status.rngfnd1_orient = self._mav.get_param('RNGFND1_ORIENT')
-
-                # If we are expecting DISTANCE_SENSOR messages, but we are not seeing them, then we have a problem
-                if self._status.rngfnd1_type == 10:
-                    self._status.prb_no_sensor_msgs = not self._status.info_ping_detected and not self._status.info_wl_dvl_detected
-                    self._status.prb_too_many_sensor_msgs = self._status.info_ping_detected and self._status.info_wl_dvl_detected
-                else:
-                    self._status.prb_no_sensor_msgs = False
-                    self._status.prb_too_many_sensor_msgs = False
 
                 # The rangefinder must point down
                 self._status.prb_bad_orient = (self._status.rngfnd1_orient is not None and

@@ -12,7 +12,7 @@ import mav_client
 def main(args):
     print(args)
     # Get a mav client to access mavlink2rest, but do not open a websocket
-    mav = mav_client.MavClient('http://localhost:6040/v1')
+    mav = mav_client.MavClient(args.mavlink2rest_url)
 
     msg = None
     while msg is None:
@@ -52,6 +52,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ping', default=None, action='store_true', help='emulate Ping sonar')
-    parser.add_argument('--wl-dvl', default=None, action='store_true', help='emulate WL DVL')
+    parser.add_argument('--mavlink2rest_url', type=str, default='http://localhost:8088/v1',
+                        help='mavlink2rest URL')
+    parser.add_argument('--ping', default=None, action='store_true',
+                        help='emulate Ping sonar')
+    parser.add_argument('--wl-dvl', default=None, action='store_true',
+                        help='emulate WL DVL')
+    parser.add_argument('--sq', type=str, default=95,
+                        help='signal quality')
     main(parser.parse_args())

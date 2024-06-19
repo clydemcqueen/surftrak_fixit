@@ -2,13 +2,14 @@
 let el_system_status = document.getElementById("system_status");
 
 // DISTANCE_SENSOR status
-let el_info_ping_detected = document.getElementById("info_ping_detected");
-let el_info_wl_dvl_detected = document.getElementById("info_wl_dvl_detected");
+let el_sensor_ping = document.getElementById("sensor_ping");
+let el_sensor_wl_dvl= document.getElementById("sensor_wl_dvl");
 
 // Errors
 let el_prb_not_configured = document.getElementById("prb_not_configured");
 let el_prb_no_sensor_msgs = document.getElementById("prb_no_sensor_msgs");
 let el_prb_too_many_sensor_msgs = document.getElementById("prb_too_many_sensor_msgs");
+let el_prb_bad_type = document.getElementById("prb_bad_type");
 let el_prb_rangefinder_timeout = document.getElementById("prb_rangefinder_timeout");
 let el_prb_global_position_int_timeout = document.getElementById("prb_global_position_int_timeout");
 let el_prb_bad_orient = document.getElementById("prb_bad_orient");
@@ -32,15 +33,14 @@ let el_rngfnd1_orient_card = document.getElementById("rngfnd1_orient_card");
 let el_surftrak_depth_card = document.getElementById("surftrak_depth_card");
 let el_psc_jerk_z_card = document.getElementById("psc_jerk_z_card");
 let el_pilot_accel_z_card = document.getElementById("pilot_accel_z_card");
+let el_rngfnd_sq_min_card = document.getElementById("rngfnd_sq_min_card");
 let el_btn_surftrak_card = document.getElementById("btn_surftrak_card");
 
 const default_json = {
     "ok" : false,
-    "info_ping_detected" : false,
-    "info_wl_dvl_detected" : false,
+    "ping" : null,
+    "wl_dvl" : null,
     "prb_not_configured" : false,
-    "prb_no_sensor_msgs" : false,
-    "prb_too_many_sensor_msgs" : false,
     "prb_rangefinder_timeout" : false,
     "prb_global_position_int_timeout" : false,
     "prb_bad_orient" : false,
@@ -57,6 +57,7 @@ const default_json = {
     "surftrak_depth" : null,
     "psc_jerk_z" : null,
     "pilot_accel_z" : null,
+    "rngfnd_sq_min" : null,
     "btn_surftrak" : null,
 }
 
@@ -79,11 +80,9 @@ async function getStatus() {
 
     const {
         ok,
-        info_ping_detected,
-        info_wl_dvl_detected,
+        ping,
+        wl_dvl,
         prb_not_configured,
-        prb_no_sensor_msgs,
-        prb_too_many_sensor_msgs,
         prb_rangefinder_timeout,
         prb_global_position_int_timeout,
         prb_bad_orient,
@@ -100,6 +99,7 @@ async function getStatus() {
         surftrak_depth,
         psc_jerk_z,
         pilot_accel_z,
+        rngfnd_sq_min,
         btn_surftrak,
     } = response_json;
 
@@ -110,12 +110,28 @@ async function getStatus() {
         system_status_text = "ArduSub is not responding";
     }
 
-    el_info_ping_detected.className = info_ping_detected ? "status-good" : "status-hidden";
-    el_info_wl_dvl_detected.className = info_wl_dvl_detected ? "status-good" : "status-hidden";
+    let num_sensors = 0;
+    if (ping) {
+        document.getElementById("ping_distance").textContent = (ping['distance'] * 0.01).toFixed(2);
+        document.getElementById("ping_sq").textContent = (ping['sq']).toString();
+        el_sensor_ping.className = "status-shown";
+        ++num_sensors;
+    } else {
+        el_sensor_ping.className = "status-hidden";
+    }
+    if (wl_dvl) {
+        document.getElementById("wl_dvl_distance").textContent = (wl_dvl['distance'] * 0.01).toFixed(2);
+        document.getElementById("wl_dvl_sq").textContent = (wl_dvl['sq']).toString();
+        el_sensor_wl_dvl.className = "status-shown";
+        ++num_sensors;
+    } else {
+        el_sensor_wl_dvl.className = "status-hidden";
+    }
 
     el_prb_not_configured.className = prb_not_configured ? "status-error" : "status-hidden";
-    el_prb_no_sensor_msgs.className = prb_no_sensor_msgs ? "status-error" : "status-hidden";
-    el_prb_too_many_sensor_msgs.className = prb_too_many_sensor_msgs ? "status-error" : "status-hidden";
+    el_prb_no_sensor_msgs.className = rngfnd1_type === 10 && num_sensors === 0 ? "status-error" : "status-hidden";
+    el_prb_too_many_sensor_msgs.className = rngfnd1_type === 10 && num_sensors > 1 ? "status-error" : "status-hidden";
+    el_prb_bad_type.className = rngfnd1_type !== 10 && num_sensors > 0 ? "status-error" : "status-hidden";
     el_prb_rangefinder_timeout.className = prb_rangefinder_timeout ? "status-error" : "status-hidden";
     el_prb_global_position_int_timeout.className = prb_global_position_int_timeout ? "status-error" : "status-hidden";
     el_prb_bad_orient.className = prb_bad_orient ? "status-error" : "status-hidden";
@@ -136,6 +152,7 @@ async function getStatus() {
     el_surftrak_depth_card.textContent = surftrak_depth === null ? "Unknown" : surftrak_depth;
     el_psc_jerk_z_card.textContent = psc_jerk_z === null ? "Unknown" : psc_jerk_z;
     el_pilot_accel_z_card.textContent = pilot_accel_z === null ? "Unknown" : pilot_accel_z;
+    el_rngfnd_sq_min_card.textContent = rngfnd_sq_min === null ? "Unknown" : rngfnd_sq_min;
     el_btn_surftrak_card.textContent = btn_surftrak === null ? "No assignment" : btn_surftrak;
 
     el_system_status.textContent = system_status_text;

@@ -11,12 +11,6 @@
         <p id="system_status" class="status-unknown">
             Waiting for the extension
         </p>
-        <p id="info_ping_detected" class="status-hidden">
-            Receiving down-facing DISTANCE_SENSOR messages from a Ping sonar
-        </p>
-        <p id="info_wl_dvl_detected" class="status-hidden">
-            Receiving down-facing DISTANCE_SENSOR messages from a Water Linked DVL
-        </p>
         <p id="prb_not_configured" class="status-hidden">
             RNGFND1_TYPE is 0, which means that there is no rangefinder configured in ArduSub
         </p>
@@ -25,6 +19,9 @@
         </p>
         <p id="prb_too_many_sensor_msgs" class="status-hidden">
             There are DISTANCE_SENSOR messages from 2 different sources, they may conflict
+        </p>
+        <p id="prb_bad_type" class="status-hidden">
+            Receiving DISTANCE_SENSOR messages, did you mean to set RNGFND1_TYPE to 10 (MAVLink)?
         </p>
         <p id="prb_rangefinder_timeout" class="status-hidden">
             Not receiving RANGEFINDER messages
@@ -45,11 +42,29 @@
             Surftrak mode (joystick function 13) is not assigned to a joystick button
         </p>
     </div>
-    <div class="grid-container">
+    <div id="sensor_ping" class="status-hidden">
+        <p class="section-header">Receiving down-facing DISTANCE_SENSOR messages from a Ping rangefinder</p>
+        <div class="grid2-container">
+            <div class="card"><p>Distance (m)</p><h2 id="ping_distance">Unknown</h2></div>
+            <div class="card"><p>Signal quality (0-100)</p><h2 id="ping_sq">Unknown</h2></div>
+        </div>
+    </div>
+    <div id="sensor_wl_dvl" class="status-hidden">
+        <p class="section-header">Receiving down-facing DISTANCE_SENSOR messages from a Water Linked DVL</p>
+        <div class="grid2-container">
+            <div class="card"><p>Distance (m)</p><h2 id="wl_dvl_distance">Unknown</h2></div>
+            <div class="card"><p>Signal quality (0-100)</p><h2 id="wl_dvl_sq">Unknown</h2></div>
+        </div>
+    </div>
+    <p class="section-header">Core values</p>
+    <div class="grid2-container">
         <div class="card"><p>Altitude (m)</p><h2 id="relative_alt_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder reading (m)</p><h2 id="rangefinder_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder target (m)</p><h2 id="rf_target_m_card">Unknown</h2></div>
         <div class="card"><p>Seafloor altitude estimate (m)</p><h2 id="seafloor_alt_m_card">Unknown</h2></div>
+    </div>
+    <p class="section-header">Parameters</p>
+    <div class="grid3-container">
         <div class="card"><p>RNGFND1_TYPE</p><h4 id="rngfnd1_type_card">Unknown</h4></div>
         <div class="card"><p>RNGFND1_ORIENT</p><h4 id="rngfnd1_orient_card">Unknown</h4></div>
         <div class="card"><p>RNGFND1_MIN_CM (cm)</p><h4 id="rngfnd1_min_cm_card">Unknown</h4></div>
@@ -57,6 +72,7 @@
         <div class="card"><p>PSC_JERK_Z (cm/s^3)</p><h4 id="psc_jerk_z_card">Unknown</h4></div>
         <div class="card"><p>PILOT_ACCEL_Z (m/s^2)</p><h4 id="pilot_accel_z_card">Unknown</h4></div>
         <div class="card"><p>SURFTRAK_DEPTH (cm)</p><h4 id="surftrak_depth_card">Unknown</h4></div>
+        <div class="card"><p>RNGFND_SQ_MIN (0-100)</p><h4 id="rngfnd_sq_min_card">Unknown</h4></div>
         <div class="card"><p>Surftrak button assignment</p><h4 id="btn_surftrak_card">Unknown</h4></div>
     </div>
     <script src="/js/index.js"></script>
