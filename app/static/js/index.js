@@ -40,13 +40,8 @@ const default_json = {
     "ok" : false,
     "ping" : null,
     "wl_dvl" : null,
-    "prb_not_configured" : false,
     "prb_rangefinder_timeout" : false,
     "prb_global_position_int_timeout" : false,
-    "prb_bad_orient" : false,
-    "prb_bad_max" : false,
-    "prb_bad_kpv" : false,
-    "prb_no_btn" : false,
     "relative_alt_m" : null,
     "rf_target_m" : null,
     "rangefinder_m" : null,
@@ -82,13 +77,8 @@ async function getStatus() {
         ok,
         ping,
         wl_dvl,
-        prb_not_configured,
         prb_rangefinder_timeout,
         prb_global_position_int_timeout,
-        prb_bad_orient,
-        prb_bad_max,
-        prb_bad_kpv,
-        prb_no_btn,
         relative_alt_m,
         rf_target_m,
         rangefinder_m,
@@ -128,17 +118,20 @@ async function getStatus() {
         el_sensor_wl_dvl.className = "status-hidden";
     }
 
-    el_prb_not_configured.className = prb_not_configured ? "status-error" : "status-hidden";
+    // See https://github.com/clydemcqueen/ardusub_surftrak/ for definition
+    let kpv = psc_jerk_z === null || pilot_accel_z === null ? 0 : 50 * psc_jerk_z / pilot_accel_z;
+
+    el_prb_not_configured.className = rngfnd1_type === 0 ? "status-error" : "status-hidden";
     el_prb_no_sensor_msgs.className = rngfnd1_type === 10 && num_sensors === 0 ? "status-error" : "status-hidden";
     el_prb_too_many_sensor_msgs.className = rngfnd1_type === 10 && num_sensors > 1 ? "status-error" : "status-hidden";
     el_prb_bad_type.className = rngfnd1_type !== 10 && num_sensors > 0 ? "status-error" : "status-hidden";
     el_prb_rangefinder_timeout.className = prb_rangefinder_timeout ? "status-error" : "status-hidden";
     el_prb_global_position_int_timeout.className = prb_global_position_int_timeout ? "status-error" : "status-hidden";
-    el_prb_bad_orient.className = prb_bad_orient ? "status-error" : "status-hidden";
+    el_prb_bad_orient.className = rngfnd1_orient !== null && rngfnd1_orient !== 25 ? "status-error" : "status-hidden";
 
-    el_prb_bad_max.className = prb_bad_max ? "status-warning" : "status-hidden";
-    el_prb_bad_kpv.className = prb_bad_kpv ? "status-warning" : "status-hidden";
-    el_prb_no_btn.className = prb_no_btn ? "status-warning" : "status-hidden";
+    el_prb_bad_max.className = rngfnd1_type !== null && rngfnd1_type !== 0 && rngfnd1_max_cm === 700 ? "status-warning" : "status-hidden";
+    el_prb_bad_kpv.className = kpv > 1.0 ? "status-warning" : "status-hidden";
+    el_prb_no_btn.className = btn_surftrak === null ? "status-warning" : "status-hidden";
 
     el_relative_alt_m_card.textContent = relative_alt_m != null ? relative_alt_m.toFixed(2) : "Unknown";
     el_rf_target_m_card.textContent = rf_target_m != null && rf_target_m > 0 ? rf_target_m.toFixed(2) : "No target";

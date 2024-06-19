@@ -23,16 +23,8 @@ class StatusModel(pydantic.BaseModel):
     wl_dvl: Optional[SensorModel] = pydantic.Field(default=None)
 
     # Errors
-    prb_not_configured: bool = pydantic.Field(default=False)
     prb_rangefinder_timeout: bool = pydantic.Field(default=False)
     prb_global_position_int_timeout: bool = pydantic.Field(default=False)
-    prb_bad_orient: bool = pydantic.Field(default=False)
-    # TODO rf_target timeout
-
-    # Warnings
-    prb_bad_max: bool = pydantic.Field(default=False)
-    prb_bad_kpv: bool = pydantic.Field(default=False)
-    prb_no_btn: bool = pydantic.Field(default=False)
 
     # From GLOBAL_POSITION_INT
     # Convert all distances to meters ("_m")
@@ -156,36 +148,10 @@ class SurftrakStatus:
             if self._status.wl_dvl is None:
                 self._status.wl_dvl = self.get_distance_sensor_msg(0, 197)
 
-            def rf_configured() -> bool:
-                return self._status.rngfnd1_type is not None and self._status.rngfnd1_type != 0
-
-            def kpv() -> float:
-                """See https://github.com/clydemcqueen/ardusub_surftrak/"""
-                if self._status.psc_jerk_z is None or self._status.pilot_accel_z is None:
-                    return 0
-                else:
-                    return 50 * self._status.psc_jerk_z / self._status.pilot_accel_z
-
-            # A rangefinder must be configured
-            self._status.prb_not_configured = self._status.rngfnd1_type == 0
-
-            # Most users will want to assign surftrak to a button
-            self._status.prb_no_btn = self._status.btn_surftrak is None
-
-            # If kpv value is > 1.0 then the sub might oscillate up/down while trying to hold range
-            self._status.prb_bad_kpv = kpv() > 1.0
-
-            if rf_configured():
+            if self._status.rngfnd1_type is not None and self._status.rngfnd1_type != 0:
                 self._status.rngfnd1_max_cm = self._mav.get_param('RNGFND1_MAX_CM')
                 self._status.rngfnd1_min_cm = self._mav.get_param('RNGFND1_MIN_CM')
                 self._status.rngfnd1_orient = self._mav.get_param('RNGFND1_ORIENT')
-
-                # The rangefinder must point down
-                self._status.prb_bad_orient = (self._status.rngfnd1_orient is not None and
-                                               self._status.rngfnd1_orient != apm2.MAV_SENSOR_ROTATION_PITCH_270)
-
-                # If RNGFND1_MAX_CM is 700 (the default) then the pilot probably forgot to configure it
-                self._status.prb_bad_max = self._status.rngfnd1_max_cm == 700
             else:
                 self._status.relative_alt_m = None
                 self._status.rangefinder_m = None
