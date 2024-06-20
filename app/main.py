@@ -23,11 +23,16 @@ def main(args):
     # Create a FastAPI app
     app = fastapi.FastAPI(title='Surftrak Fixit', description='Diagnose and fix surftrak problems')
 
-    # Add a FastAPI route: /status returns a dictionary
+    # /status returns a dictionary
     # Pydantic barks if I use "<built-in function any>", so stick with typing.Any
     @app.get("/status", status_code=fastapi.status.HTTP_200_OK)
     async def get_status() -> Any:
         return status.get_status()
+
+    # /fixit executes a fixit function
+    @app.post("/fixit", status_code=fastapi.status.HTTP_200_OK)
+    async def post_fixit(fixit: surftrak_status.FixitModel) -> Any:
+        return status.post_fixit(fixit)
 
     # Create a FastAPI sub-application: serve static files in /app/static
     # This must come after more specific routes, e.g., /status

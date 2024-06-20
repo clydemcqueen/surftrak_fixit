@@ -11,8 +11,11 @@
         <p id="system_status" class="status-unknown">
             Waiting for the extension
         </p>
-        <p id="prb_not_configured" class="status-hidden">
-            RNGFND1_TYPE is 0, which means that there is no rangefinder configured in ArduSub
+        <p id="prb_rangefinder_timeout" class="status-hidden">
+            Not receiving RANGEFINDER messages
+        </p>
+        <p id="prb_global_position_int_timeout" class="status-hidden">
+            Not receiving GLOBAL_POSITION_INT messages
         </p>
         <p id="prb_no_sensor_msgs" class="status-hidden">
             RNGFND1_TYPE is 10 (MAVLink), but there are no down-facing DISTANCE_SENSOR messages
@@ -21,25 +24,24 @@
             There are DISTANCE_SENSOR messages from 2 different sources, they may conflict
         </p>
         <p id="prb_bad_type" class="status-hidden">
-            Receiving DISTANCE_SENSOR messages, did you mean to set RNGFND1_TYPE to 10 (MAVLink)?
-        </p>
-        <p id="prb_rangefinder_timeout" class="status-hidden">
-            Not receiving RANGEFINDER messages
-        </p>
-        <p id="prb_global_position_int_timeout" class="status-hidden">
-            Not receiving GLOBAL_POSITION_INT messages
+            Did you mean to set RNGFND1_TYPE to 10 (MAVLink)?
+            <button onclick="postFixit('prb_bad_type')">Fix it</button>
         </p>
         <p id="prb_bad_orient" class="status-hidden">
             RNGFND1_ORIENT must be set to 25 (down-facing)
+            <button onclick="postFixit('prb_bad_orient')">Fix it</button>
         </p>
         <p id="prb_bad_max" class="status-hidden">
             RNGFND1_MAX_CM is 700cm, did you mean 5000cm?
+            <button onclick="postFixit('prb_bad_max')">Fix it</button>
         </p>
         <p id="prb_bad_kpv" class="status-hidden">
-            To reduce oscillation, consider setting PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500
+            To reduce oscillation, set PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500
+            <button onclick="postFixit('prb_bad_kpv')">Fix it</button>
         </p>
         <p id="prb_no_btn" class="status-hidden">
-            Surftrak mode (joystick function 13) is not assigned to a joystick button
+            No joystick button for Surftrak, a common fix is to set BTN0_FUNCTION to 13
+            <button onclick="postFixit('prb_no_btn')">Fix it</button>
         </p>
     </div>
     <div id="sensor_ping" class="status-hidden">
@@ -56,7 +58,7 @@
             <div class="card"><p>Signal quality (0-100)</p><h2 id="wl_dvl_sq">Unknown</h2></div>
         </div>
     </div>
-    <p class="section-header">Core values</p>
+    <p class="section-header">ArduSub state</p>
     <div class="grid2-container">
         <div class="card"><p>Altitude (m)</p><h2 id="relative_alt_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder reading (m)</p><h2 id="rangefinder_m_card">Unknown</h2></div>

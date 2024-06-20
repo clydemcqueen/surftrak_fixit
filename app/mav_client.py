@@ -170,7 +170,7 @@ class MavClient:
                 logger.info(f'request msg_id {msg_id} at {frequency} Hz')
                 msg['message']['param1'] = msg_id
                 msg['message']['param2'] = int(1000000 / frequency) if frequency > 0 else -1
-                self.send_msg('COMMAND_LONG:MAV_CMD_SET_MESSAGE_INTERVAL', msg)
+                self.send_msg(f'COMMAND_LONG:MAV_CMD_SET_MESSAGE_INTERVAL:{msg_id}', msg)
 
     def _request_data_stream(self, stream_id: int, frequency=4):
         """
@@ -209,7 +209,7 @@ class MavClient:
         msg['message']['target_component'] = self._target_component
         msg['message']['param_index'] = -1
         msg['message']['param_id'] = str_to_chars(param_id, 16)
-        self.send_msg('PARAM_REQUEST_READ', msg)
+        self.send_msg(f'PARAM_REQUEST_READ:{param_id}', msg)
         self._param_request_burst_count += 1
 
     def _add_ws_text_msg(self, ws_msg: aiohttp.WSMessage):
@@ -317,12 +317,13 @@ class MavClient:
         if self.ok():
             msg = self.get_template('PARAM_SET')
             if msg is not None:
+                logger.info(f'setting param {param_id} to {param_value}')
                 msg['message']['target_system'] = self._target_system
                 msg['message']['target_component'] = self._target_component
                 msg['message']['param_id'] = str_to_chars(param_id, 16)
                 msg['message']['param_value'] = param_value
-                msg['message']['param_type'] = 9  # ArduSub will ignore this
-                self.send_msg(f'PARAM_SET:{param_id}', msg)
+                msg['message']['param_type'] = {'type': 'MAV_PARAM_TYPE_REAL32'}  # ArduSub will ignore this
+                self.send_msg(f'PARAM_SET:{param_id}:{param_value}', msg)
 
     def get_named_float(self, name: str) -> Optional[float]:
         """

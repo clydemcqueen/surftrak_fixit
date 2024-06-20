@@ -1,17 +1,18 @@
-// Extension + mavlink2rest + ArduSub status
+// Overall status
 let el_system_status = document.getElementById("system_status");
 
-// DISTANCE_SENSOR status
+// MAVLink sensors
 let el_sensor_ping = document.getElementById("sensor_ping");
 let el_sensor_wl_dvl= document.getElementById("sensor_wl_dvl");
 
+// Timeouts
+let el_prb_rangefinder_timeout = document.getElementById("prb_rangefinder_timeout");
+let el_prb_global_position_int_timeout = document.getElementById("prb_global_position_int_timeout");
+
 // Errors
-let el_prb_not_configured = document.getElementById("prb_not_configured");
 let el_prb_no_sensor_msgs = document.getElementById("prb_no_sensor_msgs");
 let el_prb_too_many_sensor_msgs = document.getElementById("prb_too_many_sensor_msgs");
 let el_prb_bad_type = document.getElementById("prb_bad_type");
-let el_prb_rangefinder_timeout = document.getElementById("prb_rangefinder_timeout");
-let el_prb_global_position_int_timeout = document.getElementById("prb_global_position_int_timeout");
 let el_prb_bad_orient = document.getElementById("prb_bad_orient");
 
 // Warnings
@@ -19,13 +20,13 @@ let el_prb_bad_max = document.getElementById("prb_bad_max");
 let el_prb_bad_kpv = document.getElementById("prb_bad_kpv");
 let el_prb_no_btn = document.getElementById("prb_no_btn");
 
-// Key state values
+// ArduSub state
 let el_relative_alt_m_card = document.getElementById("relative_alt_m_card");
 let el_rf_target_m_card = document.getElementById("rf_target_m_card");
 let el_rangefinder_m_card = document.getElementById("rangefinder_m_card");
 let el_seafloor_alt_m_card = document.getElementById("seafloor_alt_m_card");
 
-// Interesting parameter values
+// Parameter values
 let el_rngfnd1_type_card = document.getElementById("rngfnd1_type_card");
 let el_rngfnd1_max_cm_card = document.getElementById("rngfnd1_max_cm_card");
 let el_rngfnd1_min_cm_card = document.getElementById("rngfnd1_min_cm_card");
@@ -93,13 +94,16 @@ async function getStatus() {
         btn_surftrak,
     } = response_json;
 
+    // Overall status
     if (ok) {
-        system_status_text = "ArduSub is running"
-        system_status_class = "status-good"
+        system_status_class = "status-hidden"
     } else if (response_ok) {
         system_status_text = "ArduSub is not responding";
     }
+    el_system_status.textContent = system_status_text;
+    el_system_status.className = system_status_class;
 
+    // MAVLink sensors
     let num_sensors = 0;
     if (ping) {
         document.getElementById("ping_distance").textContent = (ping['distance'] * 0.01).toFixed(2);
@@ -118,26 +122,31 @@ async function getStatus() {
         el_sensor_wl_dvl.className = "status-hidden";
     }
 
-    // See https://github.com/clydemcqueen/ardusub_surftrak/ for definition
+    // Calc kpv, see https://github.com/clydemcqueen/ardusub_surftrak/ for definition
     let kpv = psc_jerk_z === null || pilot_accel_z === null ? 0 : 50 * psc_jerk_z / pilot_accel_z;
 
-    el_prb_not_configured.className = rngfnd1_type === 0 ? "status-error" : "status-hidden";
+    // Timeouts
+    el_prb_rangefinder_timeout.className = ok && prb_rangefinder_timeout ? "status-error" : "status-hidden";
+    el_prb_global_position_int_timeout.className = ok && prb_global_position_int_timeout ? "status-error" : "status-hidden";
+
+    // Errors
     el_prb_no_sensor_msgs.className = rngfnd1_type === 10 && num_sensors === 0 ? "status-error" : "status-hidden";
     el_prb_too_many_sensor_msgs.className = rngfnd1_type === 10 && num_sensors > 1 ? "status-error" : "status-hidden";
-    el_prb_bad_type.className = rngfnd1_type !== 10 && num_sensors > 0 ? "status-error" : "status-hidden";
-    el_prb_rangefinder_timeout.className = prb_rangefinder_timeout ? "status-error" : "status-hidden";
-    el_prb_global_position_int_timeout.className = prb_global_position_int_timeout ? "status-error" : "status-hidden";
+    el_prb_bad_type.className = rngfnd1_type === 0 || (rngfnd1_type !== 10 && num_sensors > 0) ? "status-error" : "status-hidden";
     el_prb_bad_orient.className = rngfnd1_orient !== null && rngfnd1_orient !== 25 ? "status-error" : "status-hidden";
 
+    // Warnings
     el_prb_bad_max.className = rngfnd1_type !== null && rngfnd1_type !== 0 && rngfnd1_max_cm === 700 ? "status-warning" : "status-hidden";
     el_prb_bad_kpv.className = kpv > 1.0 ? "status-warning" : "status-hidden";
-    el_prb_no_btn.className = btn_surftrak === null ? "status-warning" : "status-hidden";
+    el_prb_no_btn.className = ok && btn_surftrak === null ? "status-warning" : "status-hidden";
 
+    // ArduSub state
     el_relative_alt_m_card.textContent = relative_alt_m != null ? relative_alt_m.toFixed(2) : "Unknown";
     el_rf_target_m_card.textContent = rf_target_m != null && rf_target_m > 0 ? rf_target_m.toFixed(2) : "No target";
     el_rangefinder_m_card.textContent = rangefinder_m != null ? rangefinder_m.toFixed(2) : "No rangefinder";
     el_seafloor_alt_m_card.textContent = relative_alt_m != null && rangefinder_m != null ? (relative_alt_m - rangefinder_m).toFixed(2) : "Unknown";
 
+    // Parameter values
     el_rngfnd1_type_card.textContent = rngfnd1_type === null ? "Unknown" : rngfnd1_type;
     el_rngfnd1_max_cm_card.textContent = rngfnd1_max_cm === null ? "Unknown" : rngfnd1_max_cm;
     el_rngfnd1_min_cm_card.textContent = rngfnd1_min_cm === null ? "Unknown" : rngfnd1_min_cm;
@@ -147,9 +156,23 @@ async function getStatus() {
     el_pilot_accel_z_card.textContent = pilot_accel_z === null ? "Unknown" : pilot_accel_z;
     el_rngfnd_sq_min_card.textContent = rngfnd_sq_min === null ? "Unknown" : rngfnd_sq_min;
     el_btn_surftrak_card.textContent = btn_surftrak === null ? "No assignment" : btn_surftrak;
-
-    el_system_status.textContent = system_status_text;
-    el_system_status.className = system_status_class;
 }
 
 setInterval(getStatus, 500);
+
+async function postFixit(fix) {
+    try {
+        const response = await fetch("/fixit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({fix: fix}),
+        });
+
+        // TODO report result
+        const result = await response.json();
+    } catch (ex) {
+        console.error(ex);
+    }
+}

@@ -2,6 +2,7 @@ import time
 from typing import Optional
 
 import pydantic
+from loguru import logger
 
 import apm2
 import mav_client
@@ -54,6 +55,10 @@ class StatusModel(pydantic.BaseModel):
     # Future:
     # firmware version
     # script installed
+
+
+class FixitModel(pydantic.BaseModel):
+    fix: str = pydantic.Field(default='')
 
 
 class SurftrakStatus:
@@ -157,3 +162,24 @@ class SurftrakStatus:
                 self._status.rangefinder_m = None
 
         return self._status.model_dump()
+
+    def post_fixit(self, fixit: FixitModel):
+        if fixit.fix == 'prb_bad_type':
+            logger.info(f'fix {fixit.fix} by setting RNGFND1_TYPE to 10')
+            self._mav.set_param('RNGFND1_TYPE', 10)
+            # TODO reboot required
+        elif fixit.fix == 'prb_bad_orient':
+            logger.info(f'fix {fixit.fix} by setting RNGFND1_ORIENT to 25')
+            self._mav.set_param('RNGFND1_ORIENT', 25)
+        elif fixit.fix == 'prb_bad_max':
+            logger.info(f'fix {fixit.fix} by setting RNGFND1_MAX_CM to 5000')
+            self._mav.set_param('RNGFND1_ORIENT', 5000)
+        elif fixit.fix == 'prb_bad_kpv':
+            logger.info(f'fix {fixit.fix} by PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500')
+            self._mav.set_param('PSC_JERK_Z', 8)
+            self._mav.set_param('PILOT_ACCEL_Z', 500)
+        elif fixit.fix == 'prb_no_btn':
+            logger.info(f'fix {fixit.fix} by setting BTN0_FUNCTION to 13')
+            self._mav.set_param('BTN0_FUNCTION', 13)
+        else:
+            logger.error(f'unrecognized fix {fixit}')
