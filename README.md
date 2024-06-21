@@ -2,15 +2,22 @@
 
 _Surftrak_ is a new flight mode in [ArduSub 4.5](https://www.ardusub.com/).
 
-_Surftrak Fixit_ is a [BlueOS](https://docs.bluerobotics.com/ardusub-zola/software/onboard/BlueOS-1.1/overview/)
-extension that can diagnose and suggest fixes for some common Surftrak problems.
+_Surftrak Fixit_ is a [BlueOS](https://docs.bluerobotics.com/ardusub-zola/software/onboard/BlueOS-1.1/overview/) extension that can diagnose and fix Surftrak problems.
 
 ## Install
 
-To install this extension in BlueOS:
+* Select _Extensions_ in the sidebar
+* Click on _Surftrak Fixit_
+* Click _Install_
+
+## Developer Notes
+
+### Install a custom version
+
 * Select _Extensions_ in the sidebar, then the _Installed_ tab
 * Click on the + icon in the lower right
-* Enter the following information, then click _Create_
+* Enter the following information, modifying as necessary
+* Click _Create_
 
 _Extension Identifier_
 ~~~
@@ -52,13 +59,13 @@ _Custom settings_
 }
 ~~~
 
-## Developer Notes
 
-This extension looks only at MAVLink messages, so it can be tested against ArduSub SITL and
+### Testing with ArduSub SITL
+
+_Surftrak Fixit_ looks only at MAVLink messages, so it can be tested against ArduSub SITL and
 [mavlink2rest](https://github.com/mavlink/mavlink2rest/).
 
-These instructions assume that you set up your machine to run ArduSub SITL.
-See [these instructions](https://ardupilot.org/dev/docs/building-the-code.html) to get started.
+See [these instructions](https://ardupilot.org/dev/docs/building-the-code.html) to set up ArduSub SITL.
 
 Terminal 1: run SITL
 ~~~
@@ -74,7 +81,7 @@ docker build --build-arg TARGET_ARCH=x86_64-unknown-linux-musl -t mavlink/mavlin
 docker run --rm --init -p 8088:8088 -p 14550:14550/udp --name mavlink2rest mavlink/mavlink2rest
 ~~~
 
-Terminal 3: run the extension
+Terminal 3: run _Surftrak Fixit_
 ~~~
 ./main.py --mavlink2rest_url http://localhost:8088/v1
 ~~~

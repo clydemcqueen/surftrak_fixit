@@ -6,76 +6,86 @@
     <title>Surftrak Fixit</title>
 </head>
 <body>
-    <div class="header">
-        <h2>Surftrak status</h2>
-        <p id="sts_extension_down" class="status-error">
-            Extension is down
-        </p>
-        <p id="sts_sub_down" class="status-hidden">
-            ArduSub is down
-        </p>
-        <p id="sts_reboot_required" class="status-hidden">
-            Reboot required
-            <button onclick="postFixit('reboot')">reboot</button>
-        </p>
-        <p id="sts_waiting_for_reboot" class="status-hidden">
-            Waiting for reboot to complete
-        </p>
-        <p id="prb_rangefinder_timeout" class="status-hidden">
-            Not receiving RANGEFINDER messages
-        </p>
-        <p id="prb_global_position_int_timeout" class="status-hidden">
-            Not receiving GLOBAL_POSITION_INT messages
-        </p>
-        <p id="prb_no_sensor_msgs" class="status-hidden">
-            RNGFND1_TYPE is 10 (MAVLink), but there are no down-facing DISTANCE_SENSOR messages
-        </p>
-        <p id="prb_too_many_sensor_msgs" class="status-hidden">
-            There are DISTANCE_SENSOR messages from 2 different sources, they may conflict
-        </p>
-        <p id="prb_bad_type" class="status-hidden">
-            Did you mean to set RNGFND1_TYPE to 10 (MAVLink)?
-            <button onclick="postFixit('prb_bad_type')">Fix it</button>
-        </p>
-        <p id="prb_bad_orient" class="status-hidden">
-            RNGFND1_ORIENT must be set to 25 (down-facing)
-            <button onclick="postFixit('prb_bad_orient')">Fix it</button>
-        </p>
-        <p id="prb_bad_max" class="status-hidden">
-            RNGFND1_MAX_CM is 700cm, did you mean 5000cm?
-            <button onclick="postFixit('prb_bad_max')">Fix it</button>
-        </p>
-        <p id="prb_bad_kpv" class="status-hidden">
-            To reduce oscillation, set PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500
-            <button onclick="postFixit('prb_bad_kpv')">Fix it</button>
-        </p>
-        <p id="prb_no_btn" class="status-hidden">
-            No joystick button for Surftrak, a common fix is to set BTN0_FUNCTION to 13
-            <button onclick="postFixit('prb_no_btn')">Fix it</button>
-        </p>
+    <h2>Surftrak status</h2>
+    <div id="sts_extension_down" class="status-shown">
+        <div class="status-error">Extension is down</div>
+    </div>
+    <div id="sts_sub_down" class="status-hidden">
+        <div class="status-error">ArduSub is down</div>
+    </div>
+    <div id="sts_reboot_required" class="status-hidden">
+        <div class="flex-container">
+            <div class="flex-msg status-error">Reboot required</div>
+            <button class="flex-btn" onclick="postFixit('reboot')">REBOOT</button>
+        </div>
+    </div>
+    <div id="sts_waiting_for_reboot" class="status-hidden">
+        <div class="status-warning">Waiting for reboot to complete</div>
+    </div>
+    <div id="prb_rangefinder_timeout" class="status-hidden">
+        <div class="status-error">Not receiving RANGEFINDER messages</div>
+    </div>
+    <div id="prb_global_position_int_timeout" class="status-hidden">
+        <div class="status-error">Not receiving GLOBAL_POSITION_INT messages</div>
+    </div>
+    <div id="prb_no_sensor_msgs" class="status-hidden">
+        <div class="status-error">RNGFND1_TYPE is 10 (MAVLink), but there are no down-facing DISTANCE_SENSOR messages</div>
+    </div>
+    <div id="prb_too_many_sensor_msgs" class="status-hidden">
+        <div class="status-error">There are DISTANCE_SENSOR messages from 2 different sources, they may conflict</div>
+    </div>
+    <div id="prb_bad_type" class="status-hidden">
+        <div class="flex-container">
+            <div class="flex-msg status-error">Did you mean to set RNGFND1_TYPE to 10 (MAVLink)?</div>
+            <button class="flex-btn" onclick="postFixit('prb_bad_type')">FIX IT</button>
+        </div>
+    </div>
+    <div id="prb_bad_orient" class="status-hidden">
+        <div class="flex-container">
+            <div class="flex-msg status-error">RNGFND1_ORIENT must be set to 25 (down-facing)</div>
+            <button class="flex-btn" onclick="postFixit('prb_bad_orient')">FIX IT</button>
+        </div>
+    </div>
+    <div id="prb_bad_max" class="status-hidden">
+        <div class="flex-container">
+            <div class="flex-msg status-warning">RNGFND1_MAX_CM is 700cm, did you mean 5000cm?</div>
+            <button class="flex-btn" onclick="postFixit('prb_bad_max')">FIX IT</button>
+        </div>
+    </div>
+    <div id="prb_bad_kpv" class="status-hidden">
+        <div class="flex-container">
+            <div class="flex-msg status-warning">To reduce oscillation, set PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500</div>
+            <button class="flex-btn" onclick="postFixit('prb_bad_kpv')">FIX IT</button>
+        </div>
+    </div>
+    <div id="prb_no_btn" class="status-hidden">
+        <div class="flex-container">
+            <div class="flex-msg status-warning">No joystick button for Surftrak, a common fix is to set BTN0_FUNCTION to 13</div>
+            <button class="flex-btn" onclick="postFixit('prb_no_btn')">FIX IT</button>
+        </div>
     </div>
     <div id="sensor_ping" class="status-hidden">
-        <p class="section-header">Receiving down-facing DISTANCE_SENSOR messages from a Ping rangefinder</p>
+        <div class="section-header">Receiving down-facing DISTANCE_SENSOR messages from a Ping rangefinder</div>
         <div class="grid2-container">
             <div class="card"><p>Distance (m)</p><h2 id="ping_distance">Unknown</h2></div>
             <div class="card"><p>Signal quality (0-100)</p><h2 id="ping_sq">Unknown</h2></div>
         </div>
     </div>
     <div id="sensor_wl_dvl" class="status-hidden">
-        <p class="section-header">Receiving down-facing DISTANCE_SENSOR messages from a Water Linked DVL</p>
+        <div class="section-header">Receiving down-facing DISTANCE_SENSOR messages from a Water Linked DVL</div>
         <div class="grid2-container">
             <div class="card"><p>Distance (m)</p><h2 id="wl_dvl_distance">Unknown</h2></div>
             <div class="card"><p>Signal quality (0-100)</p><h2 id="wl_dvl_sq">Unknown</h2></div>
         </div>
     </div>
-    <p class="section-header">ArduSub state</p>
+    <div class="section-header">ArduSub state</div>
     <div class="grid2-container">
         <div class="card"><p>Altitude (m)</p><h2 id="relative_alt_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder reading (m)</p><h2 id="rangefinder_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder target (m)</p><h2 id="rf_target_m_card">Unknown</h2></div>
         <div class="card"><p>Seafloor altitude estimate (m)</p><h2 id="seafloor_alt_m_card">Unknown</h2></div>
     </div>
-    <p class="section-header">Parameters</p>
+    <div class="section-header">Parameters</div>
     <div class="grid3-container">
         <div class="card"><p>RNGFND1_TYPE</p><h4 id="rngfnd1_type_card">Unknown</h4></div>
         <div class="card"><p>RNGFND1_ORIENT</p><h4 id="rngfnd1_orient_card">Unknown</h4></div>

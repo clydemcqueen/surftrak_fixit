@@ -5,12 +5,10 @@ body {
     background-color: rgb(255, 255, 255);
 }
 
-.header {
-    margin-bottom: 20px
-}
-
 .section-header {
     background-color: rgb(220, 220, 220);
+    padding: 6px;
+    margin: 12px 10px;
 }
 
 .grid2-container {
@@ -48,24 +46,51 @@ p,h2,h4 {
 
 .status-hidden {
     display: none;
+    padding: 4px;
+    margin: 2px 6px;
 }
 
 .status-shown {
+    padding: 4px;
+    margin: 2px 6px;
 }
 
 .status-unknown {
     background-color: rgb(220, 220, 220);
+    padding: 6px;
 }
 
 .status-good {
     background-color: rgb(146, 223, 121);
+    padding: 6px;
 }
 
 .status-warning {
     background-color: rgb(255, 245, 159);
+    font-weight: bold;
+    padding: 6px;
 }
 
 .status-error {
     background-color: rgb(248, 176, 176);
     font-weight: bold;
+    padding: 6px;
+}
+
+.flex-container {
+    display: flex;
+    align-items: center;
+}
+
+.flex-msg {
+    flex: 1;
+}
+
+.flex-btn {
+    width: 150px;
+    border: 2px solid;
+    font-weight: bold;
+    font-size: large;
+    padding: 4px;
+    margin: 0 0 0 10px;
 }

@@ -96,10 +96,10 @@ async function getStatus() {
     } = response_json;
 
     // Overall status
-    el_sts_extension_down.className = mav_state === -1 ? "status-error" : "status-hidden";
-    el_sts_sub_down.className = mav_state === 0 ? "status-error" : "status-hidden";
-    el_sts_reboot_required.className = reboot_required ? "status-error" : "status-hidden";
-    el_sts_waiting_for_reboot.className = mav_state === 2 ? "status-warning" : "status-hidden";
+    el_sts_extension_down.className = mav_state === -1 ? "status-shown" : "status-hidden";
+    el_sts_sub_down.className = mav_state === 0 ? "status-shown" : "status-hidden";
+    el_sts_reboot_required.className = reboot_required ? "status-shown" : "status-hidden";
+    el_sts_waiting_for_reboot.className = mav_state === 2 ? "status-shown" : "status-hidden";
 
     // MAVLink sensors
     let num_sensors = 0;
@@ -124,19 +124,19 @@ async function getStatus() {
     let kpv = psc_jerk_z === null || pilot_accel_z === null ? 0 : 50 * psc_jerk_z / pilot_accel_z;
 
     // Timeouts
-    el_prb_rangefinder_timeout.className = mav_state === 1 && prb_rangefinder_timeout ? "status-error" : "status-hidden";
-    el_prb_global_position_int_timeout.className = mav_state === 1 && prb_global_position_int_timeout ? "status-error" : "status-hidden";
+    el_prb_rangefinder_timeout.className = mav_state === 1 && prb_rangefinder_timeout ? "status-shown" : "status-hidden";
+    el_prb_global_position_int_timeout.className = mav_state === 1 && prb_global_position_int_timeout ? "status-shown" : "status-hidden";
 
     // Errors
-    el_prb_no_sensor_msgs.className = rngfnd1_type === 10 && num_sensors === 0 ? "status-error" : "status-hidden";
-    el_prb_too_many_sensor_msgs.className = rngfnd1_type === 10 && num_sensors > 1 ? "status-error" : "status-hidden";
-    el_prb_bad_type.className = rngfnd1_type === 0 || (rngfnd1_type !== 10 && num_sensors > 0) ? "status-error" : "status-hidden";
-    el_prb_bad_orient.className = rngfnd1_orient !== null && rngfnd1_orient !== 25 ? "status-error" : "status-hidden";
+    el_prb_no_sensor_msgs.className = rngfnd1_type === 10 && num_sensors === 0 ? "status-shown" : "status-hidden";
+    el_prb_too_many_sensor_msgs.className = rngfnd1_type === 10 && num_sensors > 1 ? "status-shown" : "status-hidden";
+    el_prb_bad_type.className = rngfnd1_type === 0 || (rngfnd1_type !== 10 && num_sensors > 0) ? "status-shown" : "status-hidden";
+    el_prb_bad_orient.className = rngfnd1_orient !== null && rngfnd1_orient !== 25 ? "status-shown" : "status-hidden";
 
     // Warnings
-    el_prb_bad_max.className = rngfnd1_type !== null && rngfnd1_type !== 0 && rngfnd1_max_cm === 700 ? "status-warning" : "status-hidden";
-    el_prb_bad_kpv.className = kpv > 1.0 ? "status-warning" : "status-hidden";
-    el_prb_no_btn.className = mav_state === 1 && btn_surftrak === null ? "status-warning" : "status-hidden";
+    el_prb_bad_max.className = rngfnd1_type !== null && rngfnd1_type !== 0 && rngfnd1_max_cm === 700 ? "status-shown" : "status-hidden";
+    el_prb_bad_kpv.className = kpv > 1.0 ? "status-shown" : "status-hidden";
+    el_prb_no_btn.className = mav_state === 1 && btn_surftrak === null ? "status-shown" : "status-hidden";
 
     // ArduSub state
     el_relative_alt_m_card.textContent = relative_alt_m != null ? relative_alt_m.toFixed(2) : "Unknown";
