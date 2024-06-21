@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import enum
 import json
 import time
 from datetime import datetime
@@ -19,7 +20,7 @@ def m2r_datetime_to_epoch(datetime_str: str) -> float:
     Turn a mavlink2rest date string (with nanoseconds) into seconds-since-epoch, comparable to time.time()
     """
     dt = datetime.strptime(datetime_str[0:-4] + 'Z', '%Y-%m-%dT%H:%M:%S.%fZ')
-    return(dt - EPOCH_START).total_seconds()
+    return (dt - EPOCH_START).total_seconds()
 
 
 def chars_to_str(param_id_chars: list[str]) -> str:
@@ -48,8 +49,13 @@ class MavClient:
     The primary connection to mavlink2rest is through a websocket. We listen to all messages and store the latest
     MAVLink message for each sys_id, comp_id, msg_id tuple. We also store all parameter values.
 
-    The system is healthy if there is an open websocket delivering regular HEARTBEAT messages. If the system becomes
-    unhealthy we delete the stored messages and parameters and start over.
+    Initiating and detecting a reboot is challenging. A pretty good way is to look at the STAT_BOOTCNT parameter.
+    This is not sent unless we request it, so request it at 1Hz. TODO will this spam the tlog files?
+
+    To catch as many reboots as possible we will consider all of these events to be evidence of a reboot:
+    -- STAT_BOOTCNT was incremented
+    -- HEARTBEAT messages stopped
+    -- the websocket was closed
     """
 
     def __init__(self, mavlink2rest_url: str, target_system=1, target_component=1):
@@ -61,6 +67,10 @@ class MavClient:
         self._websocket_is_open = False
         self._receiving_heartbeats = False
         self._last_heartbeat_time = None
+
+        # Use STAT_BOOTCNT param to track reboots, requires some special handling
+        self._rebooting = False
+        self._stat_bootcnt = None
 
         # A list of message ids and frequencies that we need
         self._msg_frequencies: dict[int, float] = {}
@@ -81,13 +91,17 @@ class MavClient:
         # Cache MAVLink message templates
         self._template_cache: dict[str, any] = {}
 
-    def _reset(self):
-        logger.warning('ArduSub is down, clearing caches')
+    def _reboot_detected(self):
+        """
+        Clear caches after a reboot. It is safe to call this multiple times.
+        """
+        logger.warning('possible reboot, clearing caches')
         self._parameters = {}
         self._named_floats = {}
         self._template_cache = {}
         self._receiving_heartbeats = False
         self._last_heartbeat_time = None
+        self._rebooting = False
 
     def get_json(self, path: str) -> Optional[dict[str, any]]:
         """
@@ -204,7 +218,7 @@ class MavClient:
             # Throttled
             return
 
-        logger.warning(f'failed to get param {param_id}, send PARAM_REQUEST_READ message')
+        logger.info(f'request param {param_id}')
         msg['message']['target_system'] = self._target_system
         msg['message']['target_component'] = self._target_component
         msg['message']['param_index'] = -1
@@ -229,13 +243,28 @@ class MavClient:
         if sys_id == self._target_system and comp_id == self._target_component:
             if msg_name == 'HEARTBEAT':
                 self._last_heartbeat_time = time.time()
+
                 if not self._receiving_heartbeats:
                     logger.info('ArduSub is up')
                     self._receiving_heartbeats = True
                     self._request_msg_frequencies()
 
+                # Request STAT_BOOTCNT at 1Hz
+                self._request_param('STAT_BOOTCNT')
+
             elif msg_name == 'PARAM_VALUE':
-                self._parameters[chars_to_str(mav_msg['message']['param_id'])] = mav_msg['message']['param_value']
+                param_id = chars_to_str(mav_msg['message']['param_id'])
+                param_value = mav_msg['message']['param_value']
+                # logger.info(f'{param_id} is now {param_value}')
+
+                if param_id == 'STAT_BOOTCNT':
+                    # Look for evidence of a reboot, does not matter who initiated it
+                    if self._stat_bootcnt is not None and param_value > self._stat_bootcnt:
+                        logger.info(f'STAT_BOOTCNT changed from {self._stat_bootcnt} to {param_value}')
+                        self._reboot_detected()
+                    self._stat_bootcnt = param_value
+                else:
+                    self._parameters[param_id] = param_value
 
             elif msg_name == 'NAMED_VALUE_FLOAT':
                 self._named_floats[chars_to_str(mav_msg['message']['name'])] = mav_msg['message']['value']
@@ -261,13 +290,23 @@ class MavClient:
             else:
                 logger.error(f'ws unexpected message type: {ws_msg.type}')
 
-    def ok(self) -> bool:
+    class State(enum.IntEnum):
+        down = 0
+        up = 1
+        waiting_for_reboot = 2
+
+    def state(self) -> State:
         # Use this as a timer
         if self._last_heartbeat_time is not None and time.time() - self._last_heartbeat_time > 2.0:
             logger.warning('HEARTBEAT time out')
-            self._reset()
+            self._reboot_detected()
 
-        return self._websocket_is_open and self._receiving_heartbeats
+        if self._rebooting:
+            return MavClient.State.waiting_for_reboot
+        elif self._websocket_is_open and self._receiving_heartbeats:
+            return MavClient.State.up
+        else:
+            return MavClient.State.down
 
     async def open_websocket(self) -> None:
         """
@@ -282,10 +321,11 @@ class MavClient:
                     logger.info(f'ws opened {ws_url}')
                     self._websocket_is_open = True
                     await self._ws_dispatch(ws)
-                    self._reset()
+                    self._reboot_detected()
                 except Exception as ex:
                     logger.error(f'ws open exception: {ex}')
                 self._websocket_is_open = False
+                self._reboot_detected()
 
     def set_msg_frequency(self, msg_id, frequency=4.0):
         """
@@ -303,7 +343,7 @@ class MavClient:
         """
         Get a parameter value. If we haven't seen it, request it and return None
         """
-        if self.ok():
+        if self.state() == MavClient.State.up:
             if param_id in self._parameters:
                 return self._parameters[param_id]
             else:
@@ -314,7 +354,7 @@ class MavClient:
         """
         Set a parameter value
         """
-        if self.ok():
+        if self.state() == MavClient.State.up:
             msg = self.get_template('PARAM_SET')
             if msg is not None:
                 logger.info(f'setting param {param_id} to {param_value}')
@@ -329,10 +369,37 @@ class MavClient:
         """
         Get a named float. If we haven't seen it, request the EXT_STAT data stream and return None
         """
-        if self.ok():
+        if self.state() == MavClient.State.up:
             if name in self._named_floats:
                 return self._named_floats[name]
             else:
-                logger.warning(f'failed to get named float {name}, send REQUEST_DATA_STREAM:2 message')
+                logger.info(f'request data stream 2 for named float {name}')
                 self._request_data_stream(apm2.MAV_DATA_STREAM_EXTENDED_STATUS)
         return None
+
+    def reboot(self) -> bool:
+        """
+        Send a MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN message and wait for STAT_BOOTCNT to increment
+        """
+        logger.info(f'request reboot')
+
+        if self._rebooting:
+            logger.error(f'already rebooting')
+            return False
+
+        if self._stat_bootcnt is None:
+            logger.error(f'no boot count, cannot reboot')
+            return False
+
+        msg = self.get_template('COMMAND_LONG')
+        if msg is None:
+            logger.error(f'no template, cannot reboot')
+            return False
+
+        msg['message']['target_system'] = self._target_system
+        msg['message']['target_component'] = self._target_component
+        msg['message']['command'] = {'type': 'MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN'}
+        msg['message']['param1'] = 1
+        self.send_msg(f'COMMAND_LONG:MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN', msg)
+        self._rebooting = True
+        return True

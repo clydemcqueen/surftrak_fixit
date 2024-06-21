@@ -8,8 +8,18 @@
 <body>
     <div class="header">
         <h2>Surftrak status</h2>
-        <p id="system_status" class="status-unknown">
-            Waiting for the extension
+        <p id="sts_extension_down" class="status-error">
+            Extension is down
+        </p>
+        <p id="sts_sub_down" class="status-hidden">
+            ArduSub is down
+        </p>
+        <p id="sts_reboot_required" class="status-hidden">
+            Reboot required
+            <button onclick="postFixit('reboot')">reboot</button>
+        </p>
+        <p id="sts_waiting_for_reboot" class="status-hidden">
+            Waiting for reboot to complete
         </p>
         <p id="prb_rangefinder_timeout" class="status-hidden">
             Not receiving RANGEFINDER messages

@@ -16,8 +16,9 @@ class SensorModel(pydantic.BaseModel):
 
 
 class StatusModel(pydantic.BaseModel):
-    # Extension status
-    ok: bool = pydantic.Field(default=False)
+    # MavClient state
+    mav_state: mav_client.MavClient.State = pydantic.Field(default=mav_client.MavClient.State.down)
+    reboot_required: bool = pydantic.Field(default=False)
 
     # Sensors that send DISTANCE_SENSOR messages
     ping: Optional[SensorModel] = pydantic.Field(default=None)
@@ -130,9 +131,9 @@ class SurftrakStatus:
                 self._t_rangefinder is None or
                 time.time() - self._t_rangefinder > MSG_TIMEOUT)
 
-        self._status.ok = self._mav.ok()
+        self._status.mav_state = self._mav.state()
 
-        if self._status.ok:
+        if self._status.mav_state == mav_client.MavClient.State.up:
             # Get named floats and parameters
             self._status.rf_target_m = self._mav.get_named_float('RFTarget')
             self._status.rngfnd1_type = self._mav.get_param('RNGFND1_TYPE')
@@ -167,7 +168,7 @@ class SurftrakStatus:
         if fixit.fix == 'prb_bad_type':
             logger.info(f'fix {fixit.fix} by setting RNGFND1_TYPE to 10')
             self._mav.set_param('RNGFND1_TYPE', 10)
-            # TODO reboot required
+            self._status.reboot_required = True
         elif fixit.fix == 'prb_bad_orient':
             logger.info(f'fix {fixit.fix} by setting RNGFND1_ORIENT to 25')
             self._mav.set_param('RNGFND1_ORIENT', 25)
@@ -181,5 +182,8 @@ class SurftrakStatus:
         elif fixit.fix == 'prb_no_btn':
             logger.info(f'fix {fixit.fix} by setting BTN0_FUNCTION to 13')
             self._mav.set_param('BTN0_FUNCTION', 13)
+        elif fixit.fix == 'reboot':
+            if self._mav.reboot():
+                self._status.reboot_required = False
         else:
             logger.error(f'unrecognized fix {fixit}')

@@ -1,5 +1,8 @@
 // Overall status
-let el_system_status = document.getElementById("system_status");
+let el_sts_extension_down = document.getElementById("sts_extension_down");
+let el_sts_sub_down = document.getElementById("sts_sub_down");
+let el_sts_reboot_required = document.getElementById("sts_reboot_required");
+let el_sts_waiting_for_reboot = document.getElementById("sts_waiting_for_reboot");
 
 // MAVLink sensors
 let el_sensor_ping = document.getElementById("sensor_ping");
@@ -38,7 +41,8 @@ let el_rngfnd_sq_min_card = document.getElementById("rngfnd_sq_min_card");
 let el_btn_surftrak_card = document.getElementById("btn_surftrak_card");
 
 const default_json = {
-    "ok" : false,
+    "mav_state" : -1,  // -1 means BE is down, 0-2 are from the BE
+    "reboot_required" : false,
     "ping" : null,
     "wl_dvl" : null,
     "prb_rangefinder_timeout" : false,
@@ -58,16 +62,12 @@ const default_json = {
 }
 
 async function getStatus() {
-    let system_status_text = "The extension is not responding";
-    let system_status_class = "status-error"
-    let response_ok = false;
     let response_json = default_json;
 
     // Get the latest status
     try {
         const response = await fetch("/status");
         if (response.ok) {
-            response_ok = true;
             response_json = await response.json();
         }
     } catch (ex) {
@@ -75,7 +75,8 @@ async function getStatus() {
     }
 
     const {
-        ok,
+        mav_state,
+        reboot_required,
         ping,
         wl_dvl,
         prb_rangefinder_timeout,
@@ -95,13 +96,10 @@ async function getStatus() {
     } = response_json;
 
     // Overall status
-    if (ok) {
-        system_status_class = "status-hidden"
-    } else if (response_ok) {
-        system_status_text = "ArduSub is not responding";
-    }
-    el_system_status.textContent = system_status_text;
-    el_system_status.className = system_status_class;
+    el_sts_extension_down.className = mav_state === -1 ? "status-error" : "status-hidden";
+    el_sts_sub_down.className = mav_state === 0 ? "status-error" : "status-hidden";
+    el_sts_reboot_required.className = reboot_required ? "status-error" : "status-hidden";
+    el_sts_waiting_for_reboot.className = mav_state === 2 ? "status-warning" : "status-hidden";
 
     // MAVLink sensors
     let num_sensors = 0;
@@ -126,8 +124,8 @@ async function getStatus() {
     let kpv = psc_jerk_z === null || pilot_accel_z === null ? 0 : 50 * psc_jerk_z / pilot_accel_z;
 
     // Timeouts
-    el_prb_rangefinder_timeout.className = ok && prb_rangefinder_timeout ? "status-error" : "status-hidden";
-    el_prb_global_position_int_timeout.className = ok && prb_global_position_int_timeout ? "status-error" : "status-hidden";
+    el_prb_rangefinder_timeout.className = mav_state === 1 && prb_rangefinder_timeout ? "status-error" : "status-hidden";
+    el_prb_global_position_int_timeout.className = mav_state === 1 && prb_global_position_int_timeout ? "status-error" : "status-hidden";
 
     // Errors
     el_prb_no_sensor_msgs.className = rngfnd1_type === 10 && num_sensors === 0 ? "status-error" : "status-hidden";
@@ -138,7 +136,7 @@ async function getStatus() {
     // Warnings
     el_prb_bad_max.className = rngfnd1_type !== null && rngfnd1_type !== 0 && rngfnd1_max_cm === 700 ? "status-warning" : "status-hidden";
     el_prb_bad_kpv.className = kpv > 1.0 ? "status-warning" : "status-hidden";
-    el_prb_no_btn.className = ok && btn_surftrak === null ? "status-warning" : "status-hidden";
+    el_prb_no_btn.className = mav_state === 1 && btn_surftrak === null ? "status-warning" : "status-hidden";
 
     // ArduSub state
     el_relative_alt_m_card.textContent = relative_alt_m != null ? relative_alt_m.toFixed(2) : "Unknown";
