@@ -10,6 +10,19 @@ _Surftrak Fixit_ is a [BlueOS](https://docs.bluerobotics.com/ardusub-zola/softwa
 * Click on _Surftrak Fixit_
 * Click _Install_
 
+## Releases
+
+### v1.0.0-beta.2
+
+* Display DISTANCE_SENSOR messages from well-known sources
+* Check for bad RNGFND1_TYPE
+* Add FIX IT buttons for some problems
+* UI improvements, works in dark mode
+
+### v1.0.0-beta.1
+
+* First version
+
 ## Developer Notes
 
 ### Install a custom version
@@ -36,7 +49,7 @@ clydemcqueen/surftrak_fixit
 
 _Docker tag_
 ~~~
-v1.0.0-beta.1
+v1.0.0-beta.2
 ~~~
 
 _Custom settings_

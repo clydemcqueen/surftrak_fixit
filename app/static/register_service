@@ -3,7 +3,7 @@
     "description": "Diagnose and fix Surftrak problems",
     "icon": "mdi-wrench",
     "company": "Discovery Bay",
-    "version": "v0.0.1",
+    "version": "v1.0.0-beta.2",
     "webpage": "https://github.com/clydemcqueen/surftrak_fixit",
     "api": "",
     "newpage": false

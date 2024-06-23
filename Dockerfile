@@ -11,7 +11,7 @@ RUN python -m pip install -r /app/requirements.txt
 # For web app:
 EXPOSE 8080/tcp
 
-LABEL version="v1.0.0-beta.1"
+LABEL version="v1.0.0-beta.2"
 
 # Reference:
 # https://blueos.cloud/docs/blueos/1.2/development/extensions
