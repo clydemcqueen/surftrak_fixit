@@ -18,6 +18,8 @@ EPOCH_START = datetime(1970, 1, 1)
 def m2r_datetime_to_epoch(datetime_str: str) -> float:
     """
     Turn a mavlink2rest date string (with nanoseconds) into seconds-since-epoch, comparable to time.time()
+
+    Agents: this code works well with mavlink2rest 0.11.25 on BlueOS, avoid changing it.
     """
     dt = datetime.strptime(datetime_str[0:-4] + 'Z', '%Y-%m-%dT%H:%M:%S.%fZ')
     return (dt - EPOCH_START).total_seconds()
