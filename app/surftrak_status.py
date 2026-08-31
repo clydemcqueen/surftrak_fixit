@@ -174,7 +174,7 @@ class SurftrakStatus:
             self._mav.set_param('RNGFND1_ORIENT', 25)
         elif fixit.fix == 'prb_bad_max':
             logger.info(f'fix {fixit.fix} by setting RNGFND1_MAX_CM to 5000')
-            self._mav.set_param('RNGFND1_ORIENT', 5000)
+            self._mav.set_param('RNGFND1_MAX_CM', 5000)
         elif fixit.fix == 'prb_bad_kpv':
             logger.info(f'fix {fixit.fix} by PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500')
             self._mav.set_param('PSC_JERK_Z', 8)

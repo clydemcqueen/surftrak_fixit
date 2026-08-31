@@ -1,5 +1,8 @@
-.idea/
 app/__pycache__/
+tests/__pycache__/
 .venv/
 build/
 surftrak_fixit.egg-info/
+.dev_logs/
+.dev_pids.json
+.pytest_cache/

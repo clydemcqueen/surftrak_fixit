@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import argparse
 import asyncio
+import os
 from typing import Any
 
 import fastapi
@@ -34,9 +35,10 @@ def main(args):
     async def post_fixit(fixit: surftrak_status.FixitModel) -> Any:
         return status.post_fixit(fixit)
 
-    # Create a FastAPI sub-application: serve static files in /app/static
+    # Create a FastAPI sub-application: serve static files in static directory
     # This must come after more specific routes, e.g., /status
-    app.mount("/", fastapi.staticfiles.StaticFiles(directory="static", html=True), name="static")
+    static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+    app.mount("/", fastapi.staticfiles.StaticFiles(directory=static_dir, html=True), name="static")
 
     # Add a FastAPI route: / returns index.html
     # Return index.html
