@@ -74,14 +74,11 @@ To test changes on your Raspberry Pi running BlueOS before making an official pu
 
 ### Tagging Strategy for Testing
 > [!TIP]
-> The [BlueOS Extensions Repository](https://github.com/bluerobotics/BlueOS-Extensions-Repository) automatically monitors Docker Hub for valid **SemVer** tags (e.g., `v1.0.0-beta.3`). To prevent unfinished builds from appearing in the public store, use a test tag (such as `beta3-test` or `dev`) when building for testing.
+> The [BlueOS Extensions Repository](https://github.com/bluerobotics/BlueOS-Extensions-Repository) automatically monitors Docker Hub for valid **SemVer** tags (e.g., `v1.0.0-beta.3`). To prevent unfinished builds from appearing in the public store, use a test tag (such as `v1.0.0-beta.3-dev`) when building for testing.
 
 1. **Build and push the multi-arch test image**:
    ```bash
-   docker buildx build \
-     --platform linux/amd64,linux/arm/v7,linux/arm64 \
-     -t clydemcqueen/surftrak_fixit:beta3-test \
-     --push .
+   docker buildx build --platform linux/amd64,linux/arm/v7,linux/arm64 -t clydemcqueen/surftrak_fixit:v1.0.0-beta.3-dev --push .
    ```
 2. **Open BlueOS in your browser**: Navigate to `http://192.168.2.2` (or `http://blueos.local`).
 3. **Enable Pirate Mode (Developer Mode)**:
@@ -94,7 +91,7 @@ To test changes on your Raspberry Pi running BlueOS before making an official pu
      - **Identifier**: `clydemcqueen.surftrak_fixit`
      - **Name**: `surftrak_fixit`
      - **Docker Image**: `clydemcqueen/surftrak_fixit`
-     - **Docker Tag**: `beta3-test`
+     - **Docker Tag**: `v1.0.0-beta.3-dev`
      - **Settings**:
        ```json
        {
