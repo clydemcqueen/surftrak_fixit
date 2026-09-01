@@ -20,6 +20,9 @@ class StatusModel(pydantic.BaseModel):
     mav_state: mav_client.MavClient.State = pydantic.Field(default=mav_client.MavClient.State.down)
     reboot_required: bool = pydantic.Field(default=False)
 
+    # Vehicle version: "4.5", "4.7", or None
+    vehicle_version: Optional[str] = pydantic.Field(default=None)
+
     # Sensors that send DISTANCE_SENSOR messages
     ping: Optional[SensorModel] = pydantic.Field(default=None)
     wl_dvl: Optional[SensorModel] = pydantic.Field(default=None)
@@ -42,8 +45,10 @@ class StatusModel(pydantic.BaseModel):
     # Assume all parameters are floats
     # Assume that RNGFND1 is dedicated to surftrak
     rngfnd1_type: Optional[float] = pydantic.Field(default=None)
-    rngfnd1_max_cm: Optional[float] = pydantic.Field(default=None)
+    rngfnd1_min: Optional[float] = pydantic.Field(default=None)
+    rngfnd1_max: Optional[float] = pydantic.Field(default=None)
     rngfnd1_min_cm: Optional[float] = pydantic.Field(default=None)
+    rngfnd1_max_cm: Optional[float] = pydantic.Field(default=None)
     rngfnd1_orient: Optional[float] = pydantic.Field(default=None)
     surftrak_depth: Optional[float] = pydantic.Field(default=None)
     psc_jerk_z: Optional[float] = pydantic.Field(default=None)
@@ -138,8 +143,6 @@ class SurftrakStatus:
             self._status.rf_target_m = self._mav.get_named_float('RFTarget')
             self._status.rngfnd1_type = self._mav.get_param('RNGFND1_TYPE')
             self._status.surftrak_depth = self._mav.get_param('SURFTRAK_DEPTH')
-            self._status.psc_jerk_z = self._mav.get_param('PSC_JERK_Z')
-            self._status.pilot_accel_z = self._mav.get_param('PILOT_ACCEL_Z')
             self._status.rngfnd_sq_min = self._mav.get_param('RNGFND_SQ_MIN')
 
             # Get BTN* params and look for surftrak-related assignments
@@ -154,13 +157,65 @@ class SurftrakStatus:
             if self._status.wl_dvl is None:
                 self._status.wl_dvl = self.get_distance_sensor_msg(0, 197)
 
-            if self._status.rngfnd1_type is not None and self._status.rngfnd1_type != 0:
+            # Sense ArduSub version: 4.5 uses RNGFND1_MIN_CM, 4.7 uses RNGFND1_MIN
+            v45_min = self._mav.get_param('RNGFND1_MIN_CM')
+            v47_min = self._mav.get_param('RNGFND1_MIN')
+
+            if v45_min is not None:
+                self._status.vehicle_version = '4.5'
+                self._status.rngfnd1_min_cm = v45_min
                 self._status.rngfnd1_max_cm = self._mav.get_param('RNGFND1_MAX_CM')
-                self._status.rngfnd1_min_cm = self._mav.get_param('RNGFND1_MIN_CM')
+                self._status.rngfnd1_min = self._status.rngfnd1_min_cm
+                self._status.rngfnd1_max = self._status.rngfnd1_max_cm
+
+                psc_jerk = self._mav.get_param('PSC_JERK_Z')
+                self._status.psc_jerk_z = round(psc_jerk, 3) if psc_jerk is not None else None
+                pilot_acc = self._mav.get_param('PILOT_ACCEL_Z')
+                self._status.pilot_accel_z = round(pilot_acc, 3) if pilot_acc is not None else None
+            elif v47_min is not None:
+                self._status.vehicle_version = '4.7'
+                self._status.rngfnd1_min = round(v47_min, 3)
+                max_val = self._mav.get_param('RNGFND1_MAX')
+                self._status.rngfnd1_max = round(max_val, 3) if max_val is not None else None
+                self._status.rngfnd1_min_cm = None
+                self._status.rngfnd1_max_cm = None
+
+                # In 4.7, PSC_JERK_Z is renamed to PSC_D_JERK
+                psc_jerk = self._mav.get_param('PSC_D_JERK')
+                if psc_jerk is None:
+                    psc_jerk = self._mav.get_param('PSC_JERK_Z')
+                self._status.psc_jerk_z = round(psc_jerk, 3) if psc_jerk is not None else None
+
+                # In 4.7, PILOT_ACCEL_Z is renamed to PILOT_ACC_Z
+                pilot_acc = self._mav.get_param('PILOT_ACC_Z')
+                if pilot_acc is None:
+                    pilot_acc = self._mav.get_param('PILOT_ACCEL_Z')
+                self._status.pilot_accel_z = round(pilot_acc, 3) if pilot_acc is not None else None
+            else:
+                self._status.vehicle_version = None
+                self._status.rngfnd1_min = None
+                self._status.rngfnd1_max = None
+                self._status.rngfnd1_min_cm = None
+                self._status.rngfnd1_max_cm = None
+
+                psc_jerk = self._mav.get_param('PSC_JERK_Z') or self._mav.get_param('PSC_D_JERK')
+                self._status.psc_jerk_z = round(psc_jerk, 3) if psc_jerk is not None else None
+                pilot_acc = self._mav.get_param('PILOT_ACCEL_Z') or self._mav.get_param('PILOT_ACC_Z')
+                self._status.pilot_accel_z = round(pilot_acc, 3) if pilot_acc is not None else None
+
+            if self._status.rngfnd1_type is not None and self._status.rngfnd1_type != 0:
                 self._status.rngfnd1_orient = self._mav.get_param('RNGFND1_ORIENT')
             else:
                 self._status.relative_alt_m = None
                 self._status.rangefinder_m = None
+        else:
+            self._status.vehicle_version = None
+            self._status.rngfnd1_min = None
+            self._status.rngfnd1_max = None
+            self._status.rngfnd1_min_cm = None
+            self._status.rngfnd1_max_cm = None
+            self._status.psc_jerk_z = None
+            self._status.pilot_accel_z = None
 
         return self._status.model_dump()
 
@@ -173,12 +228,24 @@ class SurftrakStatus:
             logger.info(f'fix {fixit.fix} by setting RNGFND1_ORIENT to 25')
             self._mav.set_param('RNGFND1_ORIENT', 25)
         elif fixit.fix == 'prb_bad_max':
-            logger.info(f'fix {fixit.fix} by setting RNGFND1_MAX_CM to 5000')
-            self._mav.set_param('RNGFND1_MAX_CM', 5000)
+            if self._status.vehicle_version == '4.7':
+                logger.info(f'fix {fixit.fix} by setting RNGFND1_MAX to 50.0')
+                self._mav.set_param('RNGFND1_MAX', 50.0)
+            else:
+                logger.info(f'fix {fixit.fix} by setting RNGFND1_MAX_CM to 5000')
+                self._mav.set_param('RNGFND1_MAX_CM', 5000)
         elif fixit.fix == 'prb_bad_kpv':
-            logger.info(f'fix {fixit.fix} by PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500')
-            self._mav.set_param('PSC_JERK_Z', 8)
-            self._mav.set_param('PILOT_ACCEL_Z', 500)
+            if self._status.vehicle_version == '4.7':
+                logger.info(f'fix {fixit.fix} by setting PSC_D_JERK to 8 and PILOT_ACC_Z to 500')
+                self._mav.set_param('PSC_D_JERK', 8)
+                if self._mav.get_param('PILOT_ACC_Z') is not None:
+                    self._mav.set_param('PILOT_ACC_Z', 500)
+                else:
+                    self._mav.set_param('PILOT_ACCEL_Z', 500)
+            else:
+                logger.info(f'fix {fixit.fix} by setting PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500')
+                self._mav.set_param('PSC_JERK_Z', 8)
+                self._mav.set_param('PILOT_ACCEL_Z', 500)
         elif fixit.fix == 'prb_no_btn':
             logger.info(f'fix {fixit.fix} by setting BTN0_FUNCTION to 13')
             self._mav.set_param('BTN0_FUNCTION', 13)

@@ -48,13 +48,13 @@
     </div>
     <div id="prb_bad_max" class="status-hidden">
         <div class="flex-container">
-            <div class="flex-msg status-warning">RNGFND1_MAX_CM is 700cm, did you mean 5000cm?</div>
+            <div id="prb_bad_max_msg" class="flex-msg status-warning">RNGFND1_MAX_CM is 700cm, did you mean 5000cm?</div>
             <button class="flex-btn" onclick="postFixit('prb_bad_max')">FIX IT</button>
         </div>
     </div>
     <div id="prb_bad_kpv" class="status-hidden">
         <div class="flex-container">
-            <div class="flex-msg status-warning">To reduce oscillation, set PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500</div>
+            <div id="prb_bad_kpv_msg" class="flex-msg status-warning">To reduce oscillation, set PSC_JERK_Z to 8 and PILOT_ACCEL_Z to 500</div>
             <button class="flex-btn" onclick="postFixit('prb_bad_kpv')">FIX IT</button>
         </div>
     </div>
@@ -79,7 +79,8 @@
         </div>
     </div>
     <div class="section-header">ArduSub state</div>
-    <div class="grid2-container">
+    <div class="grid3-container">
+        <div class="card"><p>ArduSub version</p><h2 id="ardusub_version_card">Unknown</h2></div>
         <div class="card"><p>Altitude (m)</p><h2 id="relative_alt_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder reading (m)</p><h2 id="rangefinder_m_card">Unknown</h2></div>
         <div class="card"><p>Rangefinder target (m)</p><h2 id="rf_target_m_card">Unknown</h2></div>
@@ -89,10 +90,10 @@
     <div class="grid3-container">
         <div class="card"><p>RNGFND1_TYPE</p><h4 id="rngfnd1_type_card">Unknown</h4></div>
         <div class="card"><p>RNGFND1_ORIENT</p><h4 id="rngfnd1_orient_card">Unknown</h4></div>
-        <div class="card"><p>RNGFND1_MIN_CM (cm)</p><h4 id="rngfnd1_min_cm_card">Unknown</h4></div>
-        <div class="card"><p>RNGFND1_MAX_CM (cm)</p><h4 id="rngfnd1_max_cm_card">Unknown</h4></div>
-        <div class="card"><p>PSC_JERK_Z (cm/s^3)</p><h4 id="psc_jerk_z_card">Unknown</h4></div>
-        <div class="card"><p>PILOT_ACCEL_Z (m/s^2)</p><h4 id="pilot_accel_z_card">Unknown</h4></div>
+        <div class="card"><p id="rngfnd1_min_label">RNGFND1_MIN_CM (cm)</p><h4 id="rngfnd1_min_card">Unknown</h4></div>
+        <div class="card"><p id="rngfnd1_max_label">RNGFND1_MAX_CM (cm)</p><h4 id="rngfnd1_max_card">Unknown</h4></div>
+        <div class="card"><p id="psc_jerk_z_label">PSC_JERK_Z (cm/s^3)</p><h4 id="psc_jerk_z_card">Unknown</h4></div>
+        <div class="card"><p id="pilot_accel_z_label">PILOT_ACCEL_Z (cm/s^2)</p><h4 id="pilot_accel_z_card">Unknown</h4></div>
         <div class="card"><p>SURFTRAK_DEPTH (cm)</p><h4 id="surftrak_depth_card">Unknown</h4></div>
         <div class="card"><p>RNGFND_SQ_MIN (0-100)</p><h4 id="rngfnd_sq_min_card">Unknown</h4></div>
         <div class="card"><p>Surftrak button assignment</p><h4 id="btn_surftrak_card">Unknown</h4></div>

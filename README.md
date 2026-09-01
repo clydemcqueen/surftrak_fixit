@@ -12,9 +12,10 @@ _Surftrak Fixit_ is a [BlueOS](https://docs.bluerobotics.com/ardusub-zola/softwa
 
 ## Releases
 
-### v1.0.0-beta.3
+### v1.1.0-beta.1
 
 * Bug fix: prb_bad_max should update RNGFND1_MAX_CM, not RNGFND1_ORIENT
+* Support ArduSub 4.7
 
 ### v1.0.0-beta.2
 

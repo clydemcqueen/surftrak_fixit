@@ -133,7 +133,7 @@ def test_fixit_bad_orient():
 
 
 def test_fixit_bad_max():
-    """Test fixing RNGFND1_MAX_CM."""
+    """Test fixing RNGFND1_MAX_CM / RNGFND1_MAX."""
     r = requests.post(f"{APP_URL}/fixit", json={"fix": "prb_bad_max"})
     assert r.status_code == 200
 
@@ -141,7 +141,10 @@ def test_fixit_bad_max():
     r_status = requests.get(f"{APP_URL}/status")
     assert r_status.status_code == 200
     data = r_status.json()
-    assert data.get("rngfnd1_max_cm") == 5000
+    if data.get("vehicle_version") == "4.7":
+        assert data.get("rngfnd1_max") == 50.0
+    else:
+        assert data.get("rngfnd1_max_cm") == 5000 or data.get("rngfnd1_max") == 5000
 
 
 def test_fixit_bad_kpv():
